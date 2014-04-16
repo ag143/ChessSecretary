@@ -66,11 +66,14 @@ shadow.xScale = display.contentWidth / shadow.contentWidth
 shadow.alpha = 0.45
 
 --Text to show which item we selected
+--[[
 local itemSelected = display.newText( "You selected item ", 0, 0, native.systemFontBold, 28 )
 itemSelected:setFillColor( 0 )
 itemSelected.x = display.contentWidth + itemSelected.contentWidth * 0.5
 itemSelected.y = display.contentCenterY
 gamelist.widgetGroup:insert( itemSelected )
+]]
+local itemSelected = ''
 
 -- Forward reference for our edit button & tableview
 local list, editButton, backButton
@@ -79,7 +82,7 @@ gamelist.TransitionToList = function()
 	--The table x origin refers to the center of the table in Graphics 2.0, so we translate with half the object's contentWidth
 	transition.to( list, { x = list.contentWidth * 0.5, time = 400, transition = easing.outExpo } )
 	transition.to( newButton, {alpha = 1, time = 400, transition = easing.outExpo } )
-	transition.to( itemSelected, { x = display.contentWidth + itemSelected.contentWidth * 0.5, time = 400, transition = easing.outExpo } )
+	--transition.to( itemSelected, { x = display.contentWidth + itemSelected.contentWidth * 0.5, time = 400, transition = easing.outExpo } )
 	transition.to( editButton, { alpha = 0, time = 400, transition = easing.outQuad } )
 	transition.to( emailButton, { alpha = 0, time = 400, transition = easing.outQuad } )
 	transition.to( backButton, { alpha = 0, time = 400, transition = easing.outQuad } )
@@ -122,6 +125,7 @@ gamelist.DisplayInfo = function( inforow, headingtext, infotext )
         textField[inforow].x = display.contentWidth/2
         textField[inforow].y = (titleBar.contentHeight * 2.0)+(inforow*(display.contentHeight/20))
         textField[inforow].anchorY = 0
+	gamelist.widgetGroup:insert( textField[inforow] )
 --      print( infotext )
     else
         local tHeight = 30
@@ -139,16 +143,16 @@ gamelist.DisplayInfo = function( inforow, headingtext, infotext )
     labelInfo[inforow].y = (titleBar.contentHeight * 2.0)+(inforow*(display.contentHeight/20))
     labelInfo[inforow].anchorX = 0    
     labelInfo[inforow].anchorY = 0
-
+    gamelist.widgetGroup:insert( labelInfo[inforow] )
 end
 
 gamelist.LoadInfo = function()
-	local filePath = system.pathForFile( itemSelected.text, system.DocumentsDirectory )
+	local filePath = system.pathForFile( itemSelected, system.DocumentsDirectory )
 	print( 'InLoadInfo:  ' .. filePath )
 	file = io.open( filePath, "r" )
 	if file then
                 local inforow = 1
-                gamelist.DisplayInfo( inforow, 'Game',  itemSelected.text )
+                gamelist.DisplayInfo( inforow, 'Game',  itemSelected )
                 inforow = inforow + 1
 		print( "File Opened" )
 		for line in file:lines() do
@@ -200,7 +204,7 @@ local function onRowTouch( event )
 	
 	if "release" == phase then
 		-- Update the item selected text
-		itemSelected.text = gamelist.files[row.index]
+		itemSelected = gamelist.files[row.index]
 		newFile = false
 		gamelist.TransitionToItem()
 	end
@@ -228,7 +232,7 @@ gamelist.widgetGroup:insert( shadow )
 local function onNewRelease()
 		-- Update the item selected text
 		newFile = true
-		itemSelected.text = 'Game' .. #gamelist.files + 1
+		itemSelected = 'Game' .. #gamelist.files + 1
 		gamelist.TransitionToItem()
 end
 
@@ -240,13 +244,13 @@ local function onEditRelease()
 		list:insertRow({ rowHeight = 40 })
 		newFile = false
 	end
-	gamelist.selectedFile = itemSelected.text
+	gamelist.selectedFile = itemSelected
 end
 
 --Handle the edit button release event
 local function onBackRelease()
 	--Transition in the list, transition out the item selected text and the edit button
-	itemSelected.text = '' 
+	itemSelected = '' 
 	gamelist.FindFiles()
 	gamelist.TransitionToList()
 end
