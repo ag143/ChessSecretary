@@ -501,7 +501,7 @@ end
 	buttonInfo.width = butnWt*2
 	buttonInfo.onEvent = handleButtonEvent
 	
-	buttonInfo.label = 'O-O'
+	buttonInfo.label = '0-0'
 	buttonInfo.left = butnWt
 	kingbuttons[#kingbuttons+1] = widget.newButton(buttonInfo)	
 	editor.editScreen:insert( kingbuttons[#kingbuttons] )
@@ -511,7 +511,7 @@ end
 	kingbuttons[#kingbuttons+1] = widget.newButton(buttonInfo)	
 	editor.editScreen:insert( kingbuttons[#kingbuttons] )
 	
-	buttonInfo.label = 'O-O-O'
+	buttonInfo.label = '0-0-0'
 	buttonInfo.left = butnWt * 5
 	kingbuttons[#kingbuttons+1] = widget.newButton(buttonInfo)	
 	editor.editScreen:insert( kingbuttons[#kingbuttons] )
