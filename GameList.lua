@@ -4,11 +4,13 @@ local lfs = require "lfs"
 local gamelist = {}
 gamelist.files = {}
 gamelist.selectedFile = ''
+
 local newFile = false
 local isSimulator = "simulator" == system.getInfo("environment")
+local isAndroid = "Android" == system.getInfo( "platformName" )
 labelInfo = {}
-textField = {}
-
+infoButtons = {}
+moveList = ''
 
 -- 
 -- Abstract: List View sample app
@@ -78,17 +80,32 @@ local itemSelected = ''
 -- Forward reference for our edit button & tableview
 local list, editButton, backButton
 
+gamelist.RemoveInfo = function()
+	for hiderow=1,#infoButtons do
+		transition.to( labelInfo[hiderow], { alpha = 0, time = 400, transition = easing.outQuad } )
+		transition.to( infoButtons[hiderow].infodisplay, { alpha = 0, time = 400, transition = easing.outQuad } )
+		if( infoButtons[hiderow].infoinput ) then
+			infoButtons[hiderow].infoinput:removeSelf()
+			infoButtons[hiderow].infoinput = nil
+		end
+	end
+end
+
 gamelist.TransitionToList = function()
 	--The table x origin refers to the center of the table in Graphics 2.0, so we translate with half the object's contentWidth
 	transition.to( list, { x = list.contentWidth * 0.5, time = 400, transition = easing.outExpo } )
-	transition.to( newButton, {alpha = 1, time = 400, transition = easing.outExpo } )
+	transition.to( newGameButton, {alpha = 1, time = 400, transition = easing.outExpo } )
 	--transition.to( itemSelected, { x = display.contentWidth + itemSelected.contentWidth * 0.5, time = 400, transition = easing.outExpo } )
 	transition.to( editButton, { alpha = 0, time = 400, transition = easing.outQuad } )
 	transition.to( emailButton, { alpha = 0, time = 400, transition = easing.outQuad } )
 	transition.to( backButton, { alpha = 0, time = 400, transition = easing.outQuad } )
-        for hiderow=1,#textField do
-            transition.to( textField[hiderow], { alpha = 0, time = 400, transition = easing.outQuad } )
-            transition.to( labelInfo[hiderow], { alpha = 0, time = 400, transition = easing.outQuad } )
+        for hiderow=1,#infoButtons do
+		transition.to( infoButtons[hiderow].infodisplay, { alpha = 0, time = 400, transition = easing.outQuad } )
+		transition.to( labelInfo[hiderow], { alpha = 0, time = 400, transition = easing.outQuad } )
+		if( infoButtons[hiderow].infoinput ) then
+			infoButtons[hiderow].infoinput:removeSelf()
+			infoButtons[hiderow].infoinput = nil
+		end
         end
         
 end
@@ -98,52 +115,110 @@ gamelist.TransitionToItem = function()
 
 	-- The table x origin refers to the center of the table in Graphics 2.0, so we translate with half the object's contentWidth
 	transition.to( list, { x = - list.contentWidth * 0.5, time = 400, transition = easing.outExpo } )
-	transition.to( newButton, { alpha = 0, time = 400, transition = easing.outExpo } )
+	transition.to( newGameButton, { alpha = 0, time = 400, transition = easing.outExpo } )
 	--transition.to( itemSelected, { x = display.contentCenterX, time = 400, transition = easing.outExpo } )
 	transition.to( editButton, { alpha = 1, time = 400, transition = easing.outQuad } )
 	transition.to( emailButton, { alpha = 1, time = 400, transition = easing.outQuad } )
 	transition.to( backButton, { alpha = 1, time = 400, transition = easing.outQuad } )
 	gamelist.LoadInfo()
-        for hiderow=1,#textField do
-            transition.to( textField[hiderow], { alpha = 1, time = 400, transition = easing.outQuad } )
-            transition.to( labelInfo[hiderow], { alpha = 1, time = 400, transition = easing.outQuad } )
+        for hiderow=1,#infoButtons do
+		transition.to( infoButtons[hiderow].infodisplay, { alpha = 1, time = 400, transition = easing.outQuad } )
+		transition.to( labelInfo[hiderow], { alpha = 1, time = 400, transition = easing.outQuad } )
         end
 end
 
+-------------------------------------------
+-- Handle the textField keyboard input
+--
+function NewInfoButton( iX, iY, iWidth, iHeight, infoText )
+	local infoButton = {}
+	infoButton.infoinput = nil
+	infoButton.infodisplay = nil
+	
+	infoButton.InfoEntry = function( event )
+
+		if  ( "ended" == event.phase ) or ( "submitted" == event.phase ) then
+			-- This event is called when the user stops editing a field: for example, when they touch a different field
+			-- This event occurs when the user presses the "return" key (if available) on the onscreen keyboard
+			if( infoButton.infoinputinfoinput:getLabel() == '' ) then
+				infoButton.infodisplay:setLabel( 'Not Specified' )
+			else
+				infoButton.infodisplay:setLabel( infoButton.infoinput:getLabel() )
+			end
+
+			-- Hide keyboard
+			native.setKeyboardFocus( nil )
+			print(' Now removing infoinput' )
+			infoButton.infoinput:removeSelf()
+			infoButton.infoinput = nil
+		end
+	end
+	
+	local onInfoButtonRelease = function()
+
+		local inputFontSize = 18
+		if ( isAndroid ) then
+			inputFontSize = inputFontSize - 4
+		end
+
+		infoButton.infoinput = native.newTextField( infoButton.infodisplay.x, infoButton.infodisplay.y, infoButton.infodisplay.width*0.9, infoButton.infodisplay.height )
+		infoButton.infoinput.anchorX = 0
+		infoButton.infoinput.font = native.newFont( native.systemFontBold, inputFontSize )		
+		--local handlerName = headingtext .. 'Handler'
+		infoButton.infoinput:addEventListener( "userInput", infoButton.InfoEntry )
+		
+	end
+	
+	infoButton.infodisplay = widget.newButton
+	{
+		x = iX,
+		y = iY,
+		width = iWidth,
+		height = iHeight,
+		label = infoText, 
+		labelYOffset = - 1,
+		onRelease = onInfoButtonRelease
+	}
+	infoButton.infodisplay.alpha = 1
+	--infoButton.x = x
+	--infoButton.y = y
+	infoButton.infodisplay.anchorX = 0
+	
+	return infoButton
+end
+
 gamelist.DisplayInfo = function( inforow, headingtext, infotext )
-    if isSimulator then
-        -- Simulator (simulate the textField area)
-        if infotext == nil or infotext == '' then
-            infotext = 'Not Specified'
-        end
-        print( inforow )
-        if textField[inforow] == nil then 
-            textField[inforow] = display.newText( infotext, 0, 0, "Arial", 24 )
-        end
-        textField[inforow]:setFillColor( 0.2, .2, .2 )
-        textField[inforow].text = infotext
-        textField[inforow].x = display.contentWidth/2
-        textField[inforow].y = (titleBar.contentHeight * 2.0)+(inforow*(display.contentHeight/20))
-        textField[inforow].anchorY = 0
-	gamelist.widgetGroup:insert( textField[inforow] )
---      print( infotext )
-    else
-        local tHeight = 30
-        if isAndroid then tHeight = 40 end		-- adjust for Android
-        textField = native.newTextField( 15, 80, 280, tHeight )
-        --textField:addEventListener( "userInput", fieldHandler )
-    end	    
-    
-    if labelInfo[inforow] == nil then
-        labelInfo[inforow] = display.newText( headingtext, 0,0, "Arial", 24 )
-    end
-    labelInfo[inforow]:setFillColor( 0.2, .2, .2 )
-    labelInfo[inforow].text = headingtext
-    labelInfo[inforow].x = 10
-    labelInfo[inforow].y = (titleBar.contentHeight * 2.0)+(inforow*(display.contentHeight/20))
-    labelInfo[inforow].anchorX = 0    
-    labelInfo[inforow].anchorY = 0
-    gamelist.widgetGroup:insert( labelInfo[inforow] )
+	-- Simulator (simulate the textField area)
+	if infotext == nil or infotext == '' then
+		infotext = 'Not Specified'
+	end
+	print( inforow, infotext )
+	if infoButtons[inforow] == nil then 
+		local height = 30
+		if( isAndroid ) then
+			height = 40
+		end
+			
+		infoButtons[inforow] = {}
+		infoButtons[inforow] = NewInfoButton(  display.contentWidth/2, 
+								    (titleBar.contentHeight * 2.0)+(inforow*(display.contentHeight/20)),
+								    display.contentWidth/2, 
+								    height, 
+								    infotext ) 
+		gamelist.widgetGroup:insert( infoButtons[inforow].infodisplay )
+	end
+	infoButtons[inforow].infodisplay:setLabel( infotext )
+		
+	if labelInfo[inforow] == nil then
+		labelInfo[inforow] = display.newText( headingtext, 0,0, "Arial", 14 )
+		labelInfo[inforow]:setFillColor( 0.2, .2, .2 )
+		labelInfo[inforow].x = 10
+		labelInfo[inforow].y = (titleBar.contentHeight * 2.0)+(inforow*(display.contentHeight/20))
+		labelInfo[inforow].anchorX = 0    
+		labelInfo[inforow].anchorY = 0
+		gamelist.widgetGroup:insert( labelInfo[inforow] )
+	end
+	labelInfo[inforow].text = headingtext
 end
 
 gamelist.LoadInfo = function()
@@ -151,6 +226,7 @@ gamelist.LoadInfo = function()
 	print( 'InLoadInfo:  ' .. filePath )
 	file = io.open( filePath, "r" )
 	if file then
+		moveList = ''
                 local inforow = 1
                 gamelist.DisplayInfo( inforow, 'Game',  itemSelected )
                 inforow = inforow + 1
@@ -161,9 +237,12 @@ gamelist.LoadInfo = function()
 				--print( heading, info )
                                 gamelist.DisplayInfo( inforow, heading, info )
                                 inforow = inforow + 1
+			else
+				moveList = moveList .. line
 			end	
 		end
                 io.close( file )
+		--print(moveList)
 	end
 end
 
@@ -177,7 +256,7 @@ local function onRowRender( event )
 
 	local groupContentHeight = row.contentHeight
 
-	local rowTitle = display.newText( row, gamelist.files[row.index], 0, 0, native.systemFontBold, 24 )
+	local rowTitle = display.newText( row, gamelist.files[row.index], 0, 0, native.systemFontBold, 16 )
 
 	-- in Graphics 2.0, the row.x is the center of the row, no longer the top left.
 	rowTitle.x = LEFT_PADDING
@@ -188,7 +267,7 @@ local function onRowRender( event )
 	rowTitle.y = groupContentHeight * 0.5
 	rowTitle:setFillColor( 0, 0, 0 )
 	
-	local rowArrow = display.newImage( row, "rowArrow.png", false )
+	local rowArrow = display.newImage( row, "rowarrow.png", false )
 
 	rowArrow.x = row.contentWidth - LEFT_PADDING
 
@@ -216,7 +295,7 @@ list = widget.newTableView
 	top = 38,
 	width = display.contentWidth, 
 	height = display.contentHeight - 38 - display.topStatusBarContentHeight,
-	maskFile = "mask-320x448.png",
+--	maskFile = "mask-320x448.png",
 	onRowRender = onRowRender,
 	onRowTouch = onRowTouch,
 }
@@ -256,63 +335,89 @@ local function onBackRelease()
 end
 
 --Create the edit button
-newButton = widget.newButton
+newGameButton = widget.newButton
 {
-	width = 32,
+	width = display.contentWidth / 2,
 	height = 32,
-	label = "+", 
+	label = "New Game", 
 	labelYOffset = - 1,
 	onRelease = onNewRelease
 }
-newButton.alpha = 1
-newButton.x = display.contentWidth - 80
-newButton.y = display.screenOriginY + titleBar.contentHeight * 0.5
-newButton:setFillColor(1,1,1)
-gamelist.widgetGroup:insert( newButton )
+newGameButton.alpha = 1
+newGameButton.x = display.contentWidth * 0.5
+newGameButton.y = display.contentHeight - newGameButton.contentHeight
+gamelist.widgetGroup:insert( newGameButton )
 
 --Create the edit button
 editButton = widget.newButton
 {
-	width = 298,
+	width = display.contentWidth/3,
 	height = 56,
 	label = "Edit", 
 	labelYOffset = - 1,
 	onRelease = onEditRelease
 }
 editButton.alpha = 0
-editButton.x = display.contentWidth * 0.9
+editButton.x = display.contentWidth * 0.668
 editButton.y = display.contentHeight - editButton.contentHeight
+editButton.anchorX = 0
 gamelist.widgetGroup:insert( editButton )
 
 backButton = widget.newButton
 {
-	width = 298,
+	width = display.contentWidth/3,
 	height = 56,
 	label = "Back", 
 	labelYOffset = - 1,
 	onRelease = onBackRelease
 }
 backButton.alpha = 0
-backButton.x = display.contentWidth * 0.1
-print( backButton.x )
+backButton.x = 1
+backButton.anchorX = 0
 backButton.y = display.contentHeight - backButton.contentHeight
 gamelist.widgetGroup:insert( backButton )
 
---Create the edit button
+local function onEmailRelease( event )
+	-- compose an HTML email with two attachments
+	local options =
+	{
+	   to = { "sandeep.kharkar@gmail.com" },
+	   --cc = { "john.smith@somewhere.com", "jane.smith@somewhere.com" },
+	   subject = gamelist.selectedFile,
+	   isBodyHtml = false,
+	   --body = "<html><body>I scored over <b>9000</b>!!! Can you do better?</body></html>",
+	   body = moveList,
+--	   attachment =
+--	   {
+--		  { baseDir=system.ResourceDirectory, filename="email.png", type="image" },
+--		  { baseDir=system.ResourceDirectory, filename="coronalogo.png", type="image" },
+--	   },
+	}
+	local result = native.showPopup("mail", options)
+	
+	if not result then
+		print( "Mail Not supported/setup on this device" )
+		native.showAlert( "Alert!",
+		"Mail not supported/setup on this device.", { "OK" }
+	);
+	end
+	-- NOTE: options table (and all child properties) are optional
+end
+
+--Create the Email button
 emailButton = widget.newButton
 {
-	width = 298,
+	width = display.contentWidth/3,
 	height = 56,
 	label = "Email", 
 	labelYOffset = - 1,
 	onRelease = onEmailRelease
 }
 emailButton.alpha = 0
-emailButton.x = display.contentWidth * 0.5
-emailButton.y = display.contentHeight - editButton.contentHeight
+emailButton.anchorX = 0
+emailButton.x = display.contentWidth * 0.334
+emailButton.y = display.contentHeight - emailButton.contentHeight
 gamelist.widgetGroup:insert( emailButton )
-
-
 
 gamelist.FindFiles = function()
 	local doc_path = system.pathForFile( "", system.DocumentsDirectory )

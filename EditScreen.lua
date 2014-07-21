@@ -1,4 +1,5 @@
 local widget = require( "widget" )
+local moveCheck = require( "movechecker" )
 
 local editor = {}
 editor.filename = ''
@@ -28,15 +29,15 @@ editor.editDone = false
 local moveDisplay
 local moveListDisplay
 local LEFT_PADDING = 10
-local ROW_HEIGHT = 36
+local ROW_HEIGHT = 20
 local MLDisplayHeight = display.actualContentHeight/2.75
 local MLD_Top = display.actualContentHeight/2.1 - MLDisplayHeight
 
-print( MLD_Top + MLDisplayHeight )
-print( display.contentHeight - (butnHt*7) )
+--print( MLD_Top + MLDisplayHeight )
+--print( display.contentHeight - (butnHt*7) )
 if MLD_Top + MLDisplayHeight > display.contentHeight - (butnHt*7) then
 	MLDisplayHeight = display.contentHeight - (butnHt*7) - MLD_Top
-	print( MLD_Top + MLDisplayHeight )
+	--print( MLD_Top + MLDisplayHeight )
 end
 
 
@@ -74,7 +75,7 @@ local function FormatMove( num )
 end
 
 local function ScrollToRow( num )
-	print( num, MLD_TopRow )
+	--print( num, MLD_TopRow )
 	if num <= moveListDisplay:getNumRows() then
 		if num - MLD_TopRow > MLD_NumRows then
 			-- Need to scroll down
@@ -108,7 +109,7 @@ local function onMoveListRowRender( event )
 	local groupContentHeight = row.contentHeight
 
 	--print(  FormatMove(row.index) )
-	local rowTitle = display.newText( row, FormatMove(row.index), 0, 0, native.systemFontBold, 28 )
+	local rowTitle = display.newText( row, FormatMove(row.index), 0, 0, native.systemFontBold, 14 )
 
 	-- in Graphics 2.0, the row.x is the center of the row, no longer the top left.
 	rowTitle.x = LEFT_PADDING
@@ -222,17 +223,18 @@ editor.LoadGame = function()
 	moveListDisplay:deleteAllRows()
 	local filePath = system.pathForFile( editor.filename, system.DocumentsDirectory )
 	print( filePath )
+	print( display.actualContentWidth, display.actualContentHeight - display.topStatusBarContentHeight )
 	file = io.open( filePath, "r" )
 	if file then
 		for line in file:lines() do
 			--print( 'Line ' .. line )
 			if line:find('^%[.*%]$' ) then
-				print( 'Header Line ' .. line )
+				--print( 'Header Line ' .. line )
 			else
 				local s,e, wMove, bMove = line:find( '%d%. ([^ ]*) (.*)$' )
-				print( line)
-				print(wMove)
-				print(bMove)
+				--print( line)
+				--print(wMove)
+				--print(bMove)
 				-- TODO: Use EnterMove instead
 				if wMove ~= nil then
 					if moveList[moveNum] == nil then
@@ -240,7 +242,7 @@ editor.LoadGame = function()
 						moveListDisplay:insertRow(
 						{
 							isCategory = false,
-							rowHeight = 36,
+							rowHeight = ROW_HEIGHT,
 							rowColor = { default={ 1, 1, 1, 0 }, over={ 1, 0.5, 0, 0.2 } },
 							lineColor = { 0.5, 0.5, 0.5, 0 }
 						} )
@@ -304,18 +306,11 @@ end
 
 -- Function to handle button events
 local function handleButtonEvent( event )
-    if ( "ended" == event.phase ) then
-       --print( 'Button ' .. event.target:getLabel() .. ' was pressed and released' )
-	currMove = currMove .. event.target:getLabel()
-	UpdateMoveDisplay( currMove )
-    end    
-end
-
-function CheckCurrMove()
-	if currMove == '' then
-		return false
-	end
-	return true
+	if ( "ended" == event.phase ) then
+		--print( 'Button ' .. event.target:getLabel() .. ' was pressed and released' )
+		currMove = currMove .. event.target:getLabel()
+		UpdateMoveDisplay( currMove )
+	end    
 end
 
 local function Done( event )
@@ -329,13 +324,13 @@ end
 
 local function EnterMove( event )
 	if ( "ended" == event.phase ) then
-		if CheckCurrMove() then
+		if  moveCheck.CheckCurrMove( currMove ) then
 			if moveList[moveNum] == nil then
 				moveList[moveNum] = {}
 				moveListDisplay:insertRow(
 				{
 					isCategory = false,
-					rowHeight = 36,
+					rowHeight = ROW_HEIGHT,
 					rowColor = { default={ 1, 1, 1, 0 }, over={ 1, 0.5, 0, 0.2 } },
 					lineColor = { 0.5, 0.5, 0.5, 0 }
 				} )
@@ -412,11 +407,11 @@ local buttonInfo =
 	top = baseY,
 	width = butnWt,
 	height = butnHt,
-	defaultFile = "SQbuttonD.png",
-	overFile = "SQbuttonO.png",
+	defaultFile = "sqbuttond.png",
+	overFile = "sqbuttono.png",
 	labelColor = { default={ 1,1,1 }, over={ 1,1,1 } },
 	label = "",
-	fontSize = 36,
+	fontSize = 20,
 	onEvent = handleButtonEvent
 }
 
@@ -428,7 +423,7 @@ editScreenBkgnd.anchorX = 0
 editScreenBkgnd.anchorY = 0
 editor.editScreen:insert( editScreenBkgnd )
 
-moveDisplay = display.newText( '', 0, 0, "Arial", 36 )
+moveDisplay = display.newText( '', 0, 0, "Arial", 14 )
 editor.editScreen:insert( moveDisplay )
 
 -- Create a background to go behind our tableView
@@ -495,8 +490,8 @@ end
 	editor.editScreen:insert( movebuttons[#movebuttons] )
 	
 --KingButtons
-	buttonInfo.defaultFile = "RTbuttonD.png"
-	buttonInfo.overFile = "RTbuttonO.png"	
+	buttonInfo.defaultFile = "rtbuttond.png"
+	buttonInfo.overFile = "rtbuttono.png"	
 	buttonInfo.top = baseY - butnHt*4
 	buttonInfo.width = butnWt*2
 	buttonInfo.onEvent = handleButtonEvent
@@ -523,31 +518,6 @@ end
 	buttonInfo.onEvent = Done
 	doneButton = widget.newButton(buttonInfo)	
 	editor.editScreen:insert( doneButton )
-
-local whitePawns = { 'a2', 'b2', 'c2', 'd2','e2','f2','g2','h2'}
-local whitePieces = 
-{ 
-	Ra = 'a1', 
-	Nb = 'b1', 
-	Bc = 'c1', 
-	Q  = 'd1',
-	K  = 'e1',
-	Bf = 'f1',
-	Ng = 'g1',
-	Rh = 'h1',
-}
-local blackPawns = { 'a7', 'b7', 'c7', 'd7','e7','f7','g7','h7'}
-local whitePieces = 
-{ 
-	Ra = 'a8', 
-	Nb = 'b8', 
-	Bc = 'c8', 
-	Q  = 'd8',
-	K  = 'e8',
-	Bf = 'f8',
-	Ng = 'g8',
-	Rh = 'h8',
-}
 
 
 function UpdateMoveDisplay()

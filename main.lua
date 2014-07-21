@@ -12,6 +12,7 @@ local state = 'selectgame'
 local function appState(event)
 	if state == 'selectgame' then
 		if gameList.selectedFile ~= '' then
+			gameList.RemoveInfo()
 			gameList.widgetGroup.isVisible = false
 			state = 'editgame'
 			editor.editDone = false
