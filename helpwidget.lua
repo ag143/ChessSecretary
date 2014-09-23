@@ -27,6 +27,7 @@ helpWidget.ShowHelpButton = function( size )
 		width = bufferedSize*2,
 		height = bufferedSize*2,
 		labelColor = { default={ 0, 0, 0 }, over={ 1, 0, 0 } },
+		fillColor = { default={ 1, 1, 1, 0 }, over={ 1, 1, 1, 0 } },
 		onEvent = handleButtonEvent,
 	}
 	helpButton.x = display.contentWidth - bufferedSize*2
