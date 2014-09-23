@@ -1,5 +1,10 @@
 local widget = require( "widget" )
-local moveCheck = require( "movechecker" )
+--local moveCheck = nil
+--if version >= moveCheckVersion then
+--		moveCheck = require( "movechecker" )
+--end
+
+
 
 local editor = {}
 editor.filename = ''
@@ -7,7 +12,6 @@ moveNum = 1
 local maxMoveNum = 0
 local moveColor = 1 -- 1 == w, 2 == b
 local currMove = ''
-local moveList = {}
 
 local butnWt = display.contentWidth/8
 local butnHt = display.contentHeight*2/24
@@ -155,121 +159,77 @@ moveListDisplay = widget.newTableView
 }
 --print( display.contentHeight, display.topStatusBarContentHeight )
 
-editor.GatherMoves = function()
-	local allMoves = ''
-	for i=1,#moveList do
-		allMoves = allMoves .. i
---~ 		if i == moveNum then
---~ 			allMoves = allMoves .. '> '
---~ 			if moveColor == 1 then
---~ 				allMoves = allMoves .. '( ' .. moveList[i][1] .. ' )'
---~ 				if moveList[i][2] ~= nil then
---~ 					allMoves = allMoves ..  ' ' .. moveList[i][2] .. '\n'
---~ 				end
---~ 			else
---~ 				allMoves = allMoves .. moveList[i][1]
---~ 				if moveList[i][2] ~= nil then
---~ 					allMoves = allMoves ..  ' ( ' .. moveList[i][2] .. ' )\n'
---~ 				end
---~ 			end
---~ 		else
-			allMoves = allMoves .. '. ' .. moveList[i][1]
-			if moveList[i][2] ~= nil then
-				allMoves = allMoves ..  ' ' .. moveList[i][2] .. '\n'
+local function AddMove( fromFile )
+		if  ( version < moveCheckVersion and currMove ~= '' ) then
+		    --or moveCheck.CheckCurrMove( currMove, moveColor ) then
+			
+			if fromFile and moveColor == 1 then
+				moveListDisplay:insertRow(
+				{
+					isCategory = false,
+					rowHeight = ROW_HEIGHT,
+					rowColor = { default={ 1, 1, 1, 0 }, over={ 1, 0.5, 0, 0.2 } },
+					lineColor = { 0.5, 0.5, 0.5, 0 }
+				} )
+			else
+				if moveList[moveNum] == nil then
+					moveList[moveNum] = {}
+					moveListDisplay:insertRow(
+					{
+						isCategory = false,
+						rowHeight = ROW_HEIGHT,
+						rowColor = { default={ 1, 1, 1, 0 }, over={ 1, 0.5, 0, 0.2 } },
+						lineColor = { 0.5, 0.5, 0.5, 0 }
+					} )
+				end
 			end
---		end
-	end
-	--print( allMoves )
-	return allMoves
+			if moveColor == 1 then
+				if not fromFile then
+					moveList[moveNum][1] = currMove
+				end
+				moveColor = 2
+			else
+				if not fromFile then
+					moveList[moveNum][2] = currMove
+				end
+				moveColor = 1
+				moveNum = moveNum + 1
+				if maxMoveNum < moveNum then
+					maxMoveNum = moveNum
+				end
+			end
+			if not fromFile then
+				if moveNum <= maxMoveNum and 
+				   moveList[moveNum] ~= nil and
+				   moveList[moveNum][moveColor] ~= nil then
+					currMove = moveList[moveNum][moveColor]
+				else
+					currMove = ''
+				end
+			end
+			--print( moveNum, currMove, maxMoveNum )
+			UpdateMoveDisplay()
+			ChangeButtonColors()
+			ScrollToRow( moveNum )
+		end
 end
 
-
-local lfs = require "lfs"
-
-local function SaveGame()
-	if string.find( editor.filename, '.pgn' ) == nil then
-		editor.filename = editor.filename..'.pgn'
-	end
-	local filePath = system.pathForFile( editor.filename, system.DocumentsDirectory )
-	print( filePath )
-	file = io.open( filePath, "w" )
-	file:write( '[Event ""]\n' )
-	file:write( '[Site ""]\n' )
-	file:write( '[Date ""]\n' )
-	file:write( '[Round ""]\n' )
-	file:write( '[White ""]\n' )
-	file:write( '[Black ""]\n' )
-	file:write( '[Result ""]\n' )
-	file:write( '[WhiteElo ""]\n' )
-	file:write( '[BlackElo ""]\n' )
-	file:write( '[Source "ChessSec"]\n' )
-	file:write( '[EventDate ""]\n' )
-	file:write( '[TimeSpend ""]\n' )
-	local moves = editor.GatherMoves()
-	--moves = string:gsub( moves, '\n', ' ' )
-	file:write( moves )
-	io.close( file )
-	--print( editor.GatherMoves() )
-end
-
-editor.LoadGame = function()
+editor.EditGame = function()
 	moveNum = 1
 	maxMoveNum = 0
 	moveColor = 1 -- 1 == w, 2 == b
 	currMove = ''
-	for i=1,#moveList do
-		moveList[i] = nil
-	end
 	moveListDisplay:deleteAllRows()
-	local filePath = system.pathForFile( editor.filename, system.DocumentsDirectory )
-	print( filePath )
-	print( display.actualContentWidth, display.actualContentHeight - display.topStatusBarContentHeight )
-	file = io.open( filePath, "r" )
-	if file then
-		for line in file:lines() do
-			--print( 'Line ' .. line )
-			if line:find('^%[.*%]$' ) then
-				--print( 'Header Line ' .. line )
-			else
-				local s,e, wMove, bMove = line:find( '%d%. ([^ ]*) (.*)$' )
-				--print( line)
-				--print(wMove)
-				--print(bMove)
-				-- TODO: Use EnterMove instead
-				if wMove ~= nil then
-					if moveList[moveNum] == nil then
-						moveList[moveNum] = {}
-						moveListDisplay:insertRow(
-						{
-							isCategory = false,
-							rowHeight = ROW_HEIGHT,
-							rowColor = { default={ 1, 1, 1, 0 }, over={ 1, 0.5, 0, 0.2 } },
-							lineColor = { 0.5, 0.5, 0.5, 0 }
-						} )
-						--print( 'Adding Row' )
-					end
-					moveList[moveNum][moveColor] = wMove
-					currMove = wMove
-					UpdateMoveDisplay( currMove )
-					moveColor = 2
-
-					if bMove ~= nil then
-						moveList[moveNum][moveColor] = bMove
-						currMove = bMove
-						UpdateMoveDisplay( currMove )
-						moveNum = moveNum + 1
-						maxMoveNum = moveNum
-						moveColor = 1
-					end
-				end
-				--print( moveNum, moveColor )
-			end
-		end	
-		currMove = ''
-		UpdateMoveDisplay()
-		ScrollToRow( moveNum-1 )
-		io.close( file )
+	while moveNum <= #moveList do
+		currMove = moveList[moveNum][moveColor]
+		print( moveNum, moveColor, currMove )
+		if currMove ~= nil and currMove ~= '' then
+			AddMove( true )
+		end
 	end
+	currMove = ''
+	UpdateMoveDisplay()
+	ChangeButtonColors()
 end
 
 function ChangeButtonColors()
@@ -304,18 +264,41 @@ function ChangeButtonColors()
 	end
 end
 
+function EnableButtons( numbers, letters, pieces, kings )
+	for i=1,#numberbuttons do
+		numberbuttons[i].alpha = numbers[i]
+	end
+	for i=1,#letterbuttons do
+		letterbuttons[i].alpha = letters[i]
+	end
+	for i=1,#piecebuttons do
+		piecebuttons[i].alpha = pieces[i]
+	end
+	for i=1,#kingbuttons do
+		kingbuttons[i].alpha = kings[i]
+	end
+end
+
+
 -- Function to handle button events
 local function handleButtonEvent( event )
 	if ( "ended" == event.phase ) then
 		--print( 'Button ' .. event.target:getLabel() .. ' was pressed and released' )
-		currMove = currMove .. event.target:getLabel()
-		UpdateMoveDisplay( currMove )
+		if event.target.alpha == 1 then
+				currMove = currMove .. event.target:getLabel()
+				UpdateMoveDisplay( currMove )
+		end
 	end    
 end
 
 local function Done( event )
 	if editor.editDone == false then
-		SaveGame()
+	
+		if string.find( editor.filename, '.pgn' ) == nil then
+			editor.filename = editor.filename..'.pgn'
+		end
+		SaveGame( editor.filename )
+		
 		editor.filename = ''
 		editor.editDone = true
 		moveListDisplay:deleteAllRows()
@@ -324,39 +307,7 @@ end
 
 local function EnterMove( event )
 	if ( "ended" == event.phase ) then
-		if  moveCheck.CheckCurrMove( currMove ) then
-			if moveList[moveNum] == nil then
-				moveList[moveNum] = {}
-				moveListDisplay:insertRow(
-				{
-					isCategory = false,
-					rowHeight = ROW_HEIGHT,
-					rowColor = { default={ 1, 1, 1, 0 }, over={ 1, 0.5, 0, 0.2 } },
-					lineColor = { 0.5, 0.5, 0.5, 0 }
-				} )
-			end
-			if moveColor == 1 then
-				moveList[moveNum][1] = currMove
-				moveColor = 2
-			else
-				moveList[moveNum][2] = currMove
-				moveColor = 1
-				moveNum = moveNum + 1
-				if maxMoveNum < moveNum then
-					maxMoveNum = moveNum
-				end
-			end
-			if moveNum <= maxMoveNum and 
-			   moveList[moveNum] ~= nil and
-			   moveList[moveNum][moveColor] ~= nil then
-				currMove = moveList[moveNum][moveColor]
-			else
-				currMove = ''
-			end
-			UpdateMoveDisplay()
-			ChangeButtonColors()
-			ScrollToRow( moveNum )
-		end
+		AddMove( false )
 	end
 end
 
@@ -374,6 +325,7 @@ local function PrevMove( event )
 			currMove = moveList[moveNum][1]
 			moveColor = 1
 			UpdateMoveDisplay( currMove )
+			ChangeButtonColors()
 			ScrollToRow( moveNum )
 		end
 		--print( moveNum, moveColor, maxMoveNum )
@@ -391,6 +343,7 @@ local function NextMove( event )
 			end
 			moveColor = 1
 			UpdateMoveDisplay( currMove )
+			ChangeButtonColors()
 			ScrollToRow( moveNum )
 		end
 		--print( moveNum, moveColor, maxMoveNum )
@@ -417,7 +370,7 @@ local buttonInfo =
 
 -- Setup the Edit Screen
 editor.editScreen = display.newGroup()
-editScreenBkgnd = display.newRoundedRect( 0, display.screenOriginY + display.topStatusBarContentHeight, display.actualContentWidth, display.actualContentHeight - display.topStatusBarContentHeight, 18 )
+editScreenBkgnd = display.newRect( 0, display.screenOriginY + display.topStatusBarContentHeight, display.actualContentWidth, display.actualContentHeight - display.topStatusBarContentHeight, 18 )
 editScreenBkgnd:setFillColor( 0.25, 0.25, 0.25 )
 editScreenBkgnd.anchorX = 0
 editScreenBkgnd.anchorY = 0
@@ -525,6 +478,9 @@ function UpdateMoveDisplay()
 	moveDisplay.x = display.contentWidth / 2.0
 	moveDisplay.y = baseY - butnHt*6
 	moveDisplay.anchorY = 0
+--	if version >= moveCheckVersion then
+--		EnableButtons( moveCheck.GetValidButtonList( currMove, moveColor ) )
+--	end
 end
 
 --editor.editScreen.isVisible = false

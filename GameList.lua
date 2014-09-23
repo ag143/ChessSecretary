@@ -1,16 +1,14 @@
 local widget = require( "widget" )
-local lfs = require "lfs"
+local lfs = require( "lfs" )
 
 local gamelist = {}
 gamelist.files = {}
 gamelist.selectedFile = ''
 
 local newFile = false
-local isSimulator = "simulator" == system.getInfo("environment")
-local isAndroid = "Android" == system.getInfo( "platformName" )
 labelInfo = {}
 infoButtons = {}
-moveList = ''
+local lastFileIndex=1
 
 -- 
 -- Abstract: List View sample app
@@ -37,6 +35,8 @@ local widget = require( "widget" )
 local LEFT_PADDING = 10
 local halfW = display.contentCenterX
 local halfH = display.contentCenterY
+local bannerEnd = 53
+local appOriginY = display.screenOriginY + bannerEnd
 
 --Set the background to white
 display.setDefault( "background", 255/255 )
@@ -54,7 +54,7 @@ local titleGradient = {
 -- Create toolbar to go at the top of the screen
 local titleBar = display.newRect( halfW, 0, display.contentWidth, 32 )
 titleBar:setFillColor( titleGradient )
-titleBar.y = display.screenOriginY + titleBar.contentHeight * 0.5
+titleBar.y = appOriginY + titleBar.contentHeight * 0.5
 
 -- create embossed text to go on toolbar
 local titleText = display.newEmbossedText( "My Games", halfW, titleBar.y, native.systemFontBold, 20 )
@@ -100,12 +100,12 @@ gamelist.TransitionToList = function()
 	transition.to( emailButton, { alpha = 0, time = 400, transition = easing.outQuad } )
 	transition.to( backButton, { alpha = 0, time = 400, transition = easing.outQuad } )
         for hiderow=1,#infoButtons do
-		transition.to( infoButtons[hiderow].infodisplay, { alpha = 0, time = 400, transition = easing.outQuad } )
-		transition.to( labelInfo[hiderow], { alpha = 0, time = 400, transition = easing.outQuad } )
-		if( infoButtons[hiderow].infoinput ) then
-			infoButtons[hiderow].infoinput:removeSelf()
-			infoButtons[hiderow].infoinput = nil
-		end
+			transition.to( infoButtons[hiderow].infodisplay, { alpha = 0, time = 400, transition = easing.outQuad } )
+			transition.to( labelInfo[hiderow], { alpha = 0, time = 400, transition = easing.outQuad } )
+			if( infoButtons[hiderow].infoinput ) then
+				infoButtons[hiderow].infoinput:removeSelf()
+				infoButtons[hiderow].infoinput = nil
+			end
         end
         
 end
@@ -121,34 +121,40 @@ gamelist.TransitionToItem = function()
 	transition.to( emailButton, { alpha = 1, time = 400, transition = easing.outQuad } )
 	transition.to( backButton, { alpha = 1, time = 400, transition = easing.outQuad } )
 	gamelist.LoadInfo()
-        for hiderow=1,#infoButtons do
+	for hiderow=1,#infoButtons do
 		transition.to( infoButtons[hiderow].infodisplay, { alpha = 1, time = 400, transition = easing.outQuad } )
 		transition.to( labelInfo[hiderow], { alpha = 1, time = 400, transition = easing.outQuad } )
-        end
+	end
 end
 
 -------------------------------------------
 -- Handle the textField keyboard input
 --
-function NewInfoButton( iX, iY, iWidth, iHeight, infoText )
+function NewInfoButton( iX, iY, iWidth, iHeight, infoText, headingText )
 	local infoButton = {}
 	infoButton.infoinput = nil
 	infoButton.infodisplay = nil
+	infoButton.heading = headingText
 	
 	infoButton.InfoEntry = function( event )
 
 		if  ( "ended" == event.phase ) or ( "submitted" == event.phase ) then
 			-- This event is called when the user stops editing a field: for example, when they touch a different field
 			-- This event occurs when the user presses the "return" key (if available) on the onscreen keyboard
-			if( infoButton.infoinputinfoinput:getLabel() == '' ) then
+			if( infoButton.infoinputinfoinput.text == '' ) then
 				infoButton.infodisplay:setLabel( 'Not Specified' )
+				gameInfo[infoButton.heading] = ''
 			else
-				infoButton.infodisplay:setLabel( infoButton.infoinput:getLabel() )
+				infoButton.infodisplay:setLabel( infoButton.infoinput.text )
+				gameInfo[infoButton.heading] = infoButton.infoinput.text
 			end
+			
+			native.showAlert( "Error", infoButton.infoinput:getLabel(), { "OK" }, nil )
+
 
 			-- Hide keyboard
 			native.setKeyboardFocus( nil )
-			print(' Now removing infoinput' )
+			--print(' Now removing infoinput' )
 			infoButton.infoinput:removeSelf()
 			infoButton.infoinput = nil
 		end
@@ -164,6 +170,9 @@ function NewInfoButton( iX, iY, iWidth, iHeight, infoText )
 		infoButton.infoinput = native.newTextField( infoButton.infodisplay.x, infoButton.infodisplay.y, infoButton.infodisplay.width*0.9, infoButton.infodisplay.height )
 		infoButton.infoinput.anchorX = 0
 		infoButton.infoinput.font = native.newFont( native.systemFontBold, inputFontSize )		
+		if infoButton.infodisplay:getLabel() ~= 'Not Specified' then
+			infoButton.infoinput.text = infoButton.infodisplay:getLabel()
+		end
 		--local handlerName = headingtext .. 'Handler'
 		infoButton.infoinput:addEventListener( "userInput", infoButton.InfoEntry )
 		
@@ -192,7 +201,7 @@ gamelist.DisplayInfo = function( inforow, headingtext, infotext )
 	if infotext == nil or infotext == '' then
 		infotext = 'Not Specified'
 	end
-	print( inforow, infotext )
+	--print( inforow, infotext )
 	if infoButtons[inforow] == nil then 
 		local height = 30
 		if( isAndroid ) then
@@ -201,10 +210,9 @@ gamelist.DisplayInfo = function( inforow, headingtext, infotext )
 			
 		infoButtons[inforow] = {}
 		infoButtons[inforow] = NewInfoButton(  display.contentWidth/2, 
-								    (titleBar.contentHeight * 2.0)+(inforow*(display.contentHeight/20)),
+								    appOriginY + titleBar.contentHeight + (inforow*(display.contentHeight/20)),
 								    display.contentWidth/2, 
-								    height, 
-								    infotext ) 
+								    height, infotext, headingtext ) 
 		gamelist.widgetGroup:insert( infoButtons[inforow].infodisplay )
 	end
 	infoButtons[inforow].infodisplay:setLabel( infotext )
@@ -213,7 +221,7 @@ gamelist.DisplayInfo = function( inforow, headingtext, infotext )
 		labelInfo[inforow] = display.newText( headingtext, 0,0, "Arial", 14 )
 		labelInfo[inforow]:setFillColor( 0.2, .2, .2 )
 		labelInfo[inforow].x = 10
-		labelInfo[inforow].y = (titleBar.contentHeight * 2.0)+(inforow*(display.contentHeight/20))
+		labelInfo[inforow].y = appOriginY + titleBar.contentHeight + (inforow*(display.contentHeight/20))
 		labelInfo[inforow].anchorX = 0    
 		labelInfo[inforow].anchorY = 0
 		gamelist.widgetGroup:insert( labelInfo[inforow] )
@@ -222,27 +230,13 @@ gamelist.DisplayInfo = function( inforow, headingtext, infotext )
 end
 
 gamelist.LoadInfo = function()
-	local filePath = system.pathForFile( itemSelected, system.DocumentsDirectory )
-	print( 'InLoadInfo:  ' .. filePath )
-	file = io.open( filePath, "r" )
-	if file then
-		moveList = ''
-                local inforow = 1
-                gamelist.DisplayInfo( inforow, 'Game',  itemSelected )
-                inforow = inforow + 1
-		print( "File Opened" )
-		for line in file:lines() do
-			if line:find('^%[.*%]$' ) then
-				local s,e, heading, info = line:find( '^%[([^"]*)"([^"]*)"%]$' )
-				--print( heading, info )
-                                gamelist.DisplayInfo( inforow, heading, info )
-                                inforow = inforow + 1
-			else
-				moveList = moveList .. line
-			end	
-		end
-                io.close( file )
-		--print(moveList)
+	LoadGame( itemSelected )
+	local inforow = 1
+	gamelist.DisplayInfo( inforow, 'Game',  itemSelected )
+	inforow = inforow + 1
+	for heading, info in pairs(gameInfo) do
+		gamelist.DisplayInfo( inforow, heading, info )
+		inforow = inforow + 1
 	end
 end
 
@@ -292,13 +286,22 @@ end
 -- Create a tableView
 list = widget.newTableView
 {
-	top = 38,
+	top = appOriginY,
 	width = display.contentWidth, 
-	height = display.contentHeight - 38 - display.topStatusBarContentHeight,
---	maskFile = "mask-320x448.png",
+	height = display.contentHeight - appOriginY - display.topStatusBarContentHeight,
+	--maskFile = "background.png",
+	hideBackground = true,
 	onRowRender = onRowRender,
 	onRowTouch = onRowTouch,
 }
+--print( list.height )
+
+-- Create a background to go behind our tableView
+local bkgndH = 500
+local background = display.newImageRect( gamelist.widgetGroup, "background.png", 320, bkgndH )
+background.anchorX = 0
+background.anchorY = 0
+background.y = display.contentHeight - bkgndH + appOriginY
 
 --Insert widgets/images into a group
 gamelist.widgetGroup:insert( list )
@@ -311,7 +314,8 @@ gamelist.widgetGroup:insert( shadow )
 local function onNewRelease()
 		-- Update the item selected text
 		newFile = true
-		itemSelected = 'Game' .. #gamelist.files + 1
+		itemSelected = 'Game' .. lastFileIndex .. '.pgn'
+		lastFileIndex = lastFileIndex + 1
 		gamelist.TransitionToItem()
 end
 
@@ -320,7 +324,7 @@ local function onEditRelease()
 	--Transition in the list, transition out the item selected text and the edit button
 	if newFile == true then
 		gamelist.files[#gamelist.files + 1] = gamelist.selectedFile
-		list:insertRow({ rowHeight = 40 })
+		list:insertRow({ rowHeight = 40,  rowColor = { default={ 1, 1, 1, 0 }, over={ 1, 1, 1, 0.2 } }})
 		newFile = false
 	end
 	gamelist.selectedFile = itemSelected
@@ -329,16 +333,19 @@ end
 --Handle the edit button release event
 local function onBackRelease()
 	--Transition in the list, transition out the item selected text and the edit button
+	SaveGame( itemSelected )
 	itemSelected = '' 
 	gamelist.FindFiles()
 	gamelist.TransitionToList()
 end
 
---Create the edit button
+local buttonHeight = 40
+
+--Create the New Game button
 newGameButton = widget.newButton
 {
 	width = display.contentWidth / 2,
-	height = 32,
+	height = buttonHeight,
 	label = "New Game", 
 	labelYOffset = - 1,
 	onRelease = onNewRelease
@@ -352,7 +359,7 @@ gamelist.widgetGroup:insert( newGameButton )
 editButton = widget.newButton
 {
 	width = display.contentWidth/3,
-	height = 56,
+	height = buttonHeight,
 	label = "Edit", 
 	labelYOffset = - 1,
 	onRelease = onEditRelease
@@ -366,7 +373,7 @@ gamelist.widgetGroup:insert( editButton )
 backButton = widget.newButton
 {
 	width = display.contentWidth/3,
-	height = 56,
+	height = buttonHeight,
 	label = "Back", 
 	labelYOffset = - 1,
 	onRelease = onBackRelease
@@ -386,7 +393,7 @@ local function onEmailRelease( event )
 	   subject = gamelist.selectedFile,
 	   isBodyHtml = false,
 	   --body = "<html><body>I scored over <b>9000</b>!!! Can you do better?</body></html>",
-	   body = moveList,
+	   body = GetMoveListPGN(),
 --	   attachment =
 --	   {
 --		  { baseDir=system.ResourceDirectory, filename="email.png", type="image" },
@@ -408,7 +415,7 @@ end
 emailButton = widget.newButton
 {
 	width = display.contentWidth/3,
-	height = 56,
+	height = buttonHeight,
 	label = "Email", 
 	labelYOffset = - 1,
 	onRelease = onEmailRelease
@@ -428,12 +435,17 @@ gamelist.FindFiles = function()
 	list:deleteAllRows()
 	for file in lfs.dir(doc_path) do
 		--file is the current file or directory name
-		print( "Found file: " .. file )
+		--print( "Found file: " .. file )
 		if file:find( '.pgn' ) then
 			gamelist.files[#gamelist.files + 1] = file
-			list:insertRow({ rowHeight = 40 })
+			s,e, index = file:find('Game(%d+).pgn$' )
+			if index ~= nil and tonumber( index ) >= lastFileIndex then
+				lastFileIndex = tonumber( index ) + 1
+			end
+			list:insertRow({ rowHeight = 40,  rowColor = { default={ 1, 1, 1, 0 }, over={ 1, 1, 1, 0.2 } }})
 		end
 	end
+	--print( lastFileIndex )
 end
 
 gamelist.FindFiles()

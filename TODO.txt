@@ -1,0 +1,12 @@
++ Make Date Fields be Date Fields in GameInfo screen
++ Make Results field be a drop down
++ Enforce numeric range on ELO
++ Get email for sending email
++ Save Settings and use them in app
++ Make buttons in game list use shape (rounded rect)
++ Add Help Button on each screen
+
+- Save when backing out of the Game Info Screen
+- Better method of naming a new file
+- Add Banner Ads
+- Move game list and game info screens down so the banner ads don't overlap
