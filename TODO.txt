@@ -4,9 +4,10 @@
 + Get email for sending email
 + Save Settings and use them in app
 + Make buttons in game list use shape (rounded rect)
-+ Add Help Button on each screen
++ Add help screens for each phase
 
-- Save when backing out of the Game Info Screen
-- Better method of naming a new file
-- Add Banner Ads
-- Move game list and game info screens down so the banner ads don't overlap
+- (1.01) Save when backing out of the Game Info Screen
+- (1.01) Better method of naming a new file
+- (1.02) Add Banner Ads
+- (1.02) Move game list and game info screens down so the banner ads don't overlap
+- (1.02) Add Help Button on each screen
