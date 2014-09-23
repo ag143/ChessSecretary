@@ -55,6 +55,7 @@ local titleGradient = {
 local titleBar = display.newRect( halfW, 0, display.contentWidth, 32 )
 titleBar:setFillColor( titleGradient )
 titleBar.y = appOriginY + titleBar.contentHeight * 0.5
+local topUsableY = appOriginY + titleBar.contentHeight
 
 -- create embossed text to go on toolbar
 local titleText = display.newEmbossedText( "My Games", halfW, titleBar.y, native.systemFontBold, 20 )
@@ -162,7 +163,7 @@ function NewInfoButton( iX, iY, iWidth, iHeight, infoText, headingText )
 	
 	local onInfoButtonRelease = function()
 
-		local inputFontSize = 18
+		local inputFontSize = 14
 		if ( isAndroid ) then
 			inputFontSize = inputFontSize - 4
 		end
@@ -192,7 +193,7 @@ function NewInfoButton( iX, iY, iWidth, iHeight, infoText, headingText )
 	--infoButton.x = x
 	--infoButton.y = y
 	infoButton.infodisplay.anchorX = 0
-	
+	infoButton.infodisplay.anchorY = 0
 	return infoButton
 end
 
@@ -210,7 +211,7 @@ gamelist.DisplayInfo = function( inforow, headingtext, infotext )
 			
 		infoButtons[inforow] = {}
 		infoButtons[inforow] = NewInfoButton(  display.contentWidth/2, 
-								    appOriginY + titleBar.contentHeight + (inforow*(display.contentHeight/20)),
+								    topUsableY + (inforow*(display.contentHeight/20)),
 								    display.contentWidth/2, 
 								    height, infotext, headingtext ) 
 		gamelist.widgetGroup:insert( infoButtons[inforow].infodisplay )
@@ -221,7 +222,7 @@ gamelist.DisplayInfo = function( inforow, headingtext, infotext )
 		labelInfo[inforow] = display.newText( headingtext, 0,0, "Arial", 14 )
 		labelInfo[inforow]:setFillColor( 0.2, .2, .2 )
 		labelInfo[inforow].x = 10
-		labelInfo[inforow].y = appOriginY + titleBar.contentHeight + (inforow*(display.contentHeight/20))
+		labelInfo[inforow].y = topUsableY + (inforow*(display.contentHeight/20))
 		labelInfo[inforow].anchorX = 0    
 		labelInfo[inforow].anchorY = 0
 		gamelist.widgetGroup:insert( labelInfo[inforow] )
@@ -286,9 +287,9 @@ end
 -- Create a tableView
 list = widget.newTableView
 {
-	top = appOriginY,
+	top = topUsableY,
 	width = display.contentWidth, 
-	height = display.contentHeight - appOriginY - display.topStatusBarContentHeight,
+	height = display.contentHeight - topUsableY,
 	--maskFile = "background.png",
 	hideBackground = true,
 	onRowRender = onRowRender,
