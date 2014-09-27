@@ -8,6 +8,8 @@ local widget = require( "widget" )
 
 local editor = {}
 editor.filename = ''
+local editMode = "edit"
+
 moveNum = 1
 local maxMoveNum = 0
 local moveColor = 1 -- 1 == w, 2 == b
@@ -20,7 +22,9 @@ if butnHt > butnWt then
 end
 local baseY = display.contentHeight-butnHt
 
-editor.editScreen = nil
+editor.screens = nil
+local editScreen = nil
+local helpScreen = nil
 local editScreenBkgnd = nil
 local numberbuttons = {}
 local letterbuttons = {}
@@ -368,24 +372,47 @@ local buttonInfo =
 	onEvent = handleButtonEvent
 }
 
+-- Setup all Screens for Edit Mode
+editor.screens = display.newGroup()
+
 -- Setup the Edit Screen
-editor.editScreen = display.newGroup()
+editScreen = display.newGroup()
+editor.screens:insert( editScreen )
+
+-- Setup the Help Screen
+helpScreen = display.newGroup()
+editor.screens:insert( helpScreen )
+
+local function TransitionToHelp()
+	print( 'Edit Help' )
+	transition.to( editScreen, { alpha = 0, time = 400, transition = easing.outQuad } )
+	transition.to( helpScreen, { alpha = 1, time = 400, transition = easing.outExpo } )
+	editMode = 'help'
+end
+
+local function TransitionToEdit()
+	transition.to( helpScreen, { alpha = 0, time = 400, transition = easing.outQuad } )
+	transition.to( editScreen, { alpha = 1, time = 400, transition = easing.outExpo } )
+	editMode = 'edit'
+end
+
+-- Add controls to Edit Screen
 editScreenBkgnd = display.newRect( 0, display.screenOriginY + display.topStatusBarContentHeight, display.actualContentWidth, display.actualContentHeight - display.topStatusBarContentHeight, 18 )
 editScreenBkgnd:setFillColor( 0.25, 0.25, 0.25 )
 editScreenBkgnd.anchorX = 0
 editScreenBkgnd.anchorY = 0
-editor.editScreen:insert( editScreenBkgnd )
+editScreen:insert( editScreenBkgnd )
 
 moveDisplay = display.newText( '', 0, 0, "Arial", 14 )
-editor.editScreen:insert( moveDisplay )
+editScreen:insert( moveDisplay )
 
 -- Create a background to go behind our tableView
-local background = display.newImage( editor.editScreen, "bg.png", display.contentCenterX - display.actualContentWidth/4, MLD_Top, true )
+local background = display.newImage( editScreen, "bg.png", display.contentCenterX - display.actualContentWidth/4, MLD_Top, true )
 background.height = MLDisplayHeight
 background.width = display.actualContentWidth/2
 background.anchorX = 0; background.anchorY = 0
 
-editor.editScreen:insert( moveListDisplay )
+editScreen:insert( moveListDisplay )
 
 -- Setup the keyboard
 buttonInfo.height = butnHt
@@ -398,20 +425,20 @@ for i=1,8 do
 	buttonInfo.top = baseY-butnHt
 	buttonInfo.label = i
 	numberbuttons[i] = widget.newButton(buttonInfo)
-	editor.editScreen:insert( numberbuttons[i] )
+	editScreen:insert( numberbuttons[i] )
 
 	-- Letter Buttons
 	buttonInfo.top = baseY - (2*butnHt)
 	buttonInfo.label = letters[i]
 	letterbuttons[i] = widget.newButton(buttonInfo)
-	editor.editScreen:insert( letterbuttons[i] )
+	editScreen:insert( letterbuttons[i] )
 
 	-- Piece Buttons
 	if pieces[i] ~= '' then
 		buttonInfo.top = baseY - (3*butnHt)
 		buttonInfo.label = pieces[i]
 		piecebuttons[#piecebuttons+1] = widget.newButton(buttonInfo)
-		editor.editScreen:insert( piecebuttons[#piecebuttons] )
+		editScreen:insert( piecebuttons[#piecebuttons] )
 	end
 end
 
@@ -422,25 +449,25 @@ end
 	buttonInfo.label = '<<'
 	buttonInfo.onEvent = PrevMove
 	movebuttons[#movebuttons+1] = widget.newButton(buttonInfo)	
-	editor.editScreen:insert( movebuttons[#movebuttons] )
+	editScreen:insert( movebuttons[#movebuttons] )
 
 	buttonInfo.left = 3 * butnWt
 	buttonInfo.label = '<'
 	buttonInfo.onEvent = BkspMove
 	movebuttons[#movebuttons+1] = widget.newButton(buttonInfo)	
-	editor.editScreen:insert( movebuttons[#movebuttons] )
+	editScreen:insert( movebuttons[#movebuttons] )
 
 	buttonInfo.left = 4 * butnWt
 	buttonInfo.label = '>'
 	buttonInfo.onEvent = EnterMove
 	movebuttons[#movebuttons+1] = widget.newButton(buttonInfo)	
-	editor.editScreen:insert( movebuttons[#movebuttons] )
+	editScreen:insert( movebuttons[#movebuttons] )
 
 	buttonInfo.left = 5 * butnWt
 	buttonInfo.label = '>>'
 	buttonInfo.onEvent = NextMove
 	movebuttons[#movebuttons+1] = widget.newButton(buttonInfo)	
-	editor.editScreen:insert( movebuttons[#movebuttons] )
+	editScreen:insert( movebuttons[#movebuttons] )
 	
 --KingButtons
 	buttonInfo.defaultFile = "rtbuttond.png"
@@ -452,17 +479,17 @@ end
 	buttonInfo.label = '0-0'
 	buttonInfo.left = butnWt
 	kingbuttons[#kingbuttons+1] = widget.newButton(buttonInfo)	
-	editor.editScreen:insert( kingbuttons[#kingbuttons] )
+	editScreen:insert( kingbuttons[#kingbuttons] )
 
 	buttonInfo.label = 'K'
 	buttonInfo.left = butnWt * 3
 	kingbuttons[#kingbuttons+1] = widget.newButton(buttonInfo)	
-	editor.editScreen:insert( kingbuttons[#kingbuttons] )
+	editScreen:insert( kingbuttons[#kingbuttons] )
 	
 	buttonInfo.label = '0-0-0'
 	buttonInfo.left = butnWt * 5
 	kingbuttons[#kingbuttons+1] = widget.newButton(buttonInfo)	
-	editor.editScreen:insert( kingbuttons[#kingbuttons] )
+	editScreen:insert( kingbuttons[#kingbuttons] )
 	
 --Done Button
 	buttonInfo.top = baseY - butnHt*5
@@ -470,7 +497,7 @@ end
 	buttonInfo.left = butnWt * 3
 	buttonInfo.onEvent = Done
 	doneButton = widget.newButton(buttonInfo)	
-	editor.editScreen:insert( doneButton )
+	editScreen:insert( doneButton )
 
 
 function UpdateMoveDisplay()
@@ -483,5 +510,74 @@ function UpdateMoveDisplay()
 --	end
 end
 
---editor.editScreen.isVisible = false
+
+-- Add controls to Help Screen
+local function scrollListener( event )
+	local direction = event.direction
+	
+	-- If the scrollView has reached it's scroll limit
+	if event.limitReached and ( "left" == direction or "right" == direction ) then
+		TransitionToEdit()
+	end
+			
+	return true
+end
+
+-- Create a ScrollView
+local scrollView = widget.newScrollView
+{
+	left = 0,
+	top = appOriginY,
+	width = display.contentWidth,
+	height = display.contentHeight,
+	bottomPadding = 50,
+	id = "onBottom",
+	horizontalScrollDisabled = false,
+	verticalScrollDisabled = false,
+	listener = scrollListener,
+}
+helpScreen:insert( scrollView )
+
+--Create a text object for the scrollViews title
+local titleText = display.newText("Game Edit Help", display.contentCenterX, 24, native.systemFontBold, 24)
+titleText:setFillColor( 0 )
+helpScreen:insert( titleText )
+scrollView:insert( titleText )
+
+local instrText1 = display.newText("Scroll Up/Down to Read", display.contentCenterX, 60, native.systemFontBold, 16)
+instrText1.y = titleText.y + titleText.contentHeight + 5
+instrText1:setFillColor( 0 )
+helpScreen:insert( instrText1 )
+scrollView:insert( instrText1 )
+
+local instrText2 = display.newText("Scroll Left/Right to Dismiss", display.contentCenterX, 60, native.systemFontBold, 16)
+instrText2.y = instrText1.y + instrText1.contentHeight + 5
+instrText2:setFillColor( 0 )
+helpScreen:insert( instrText2 )
+scrollView:insert( instrText2 )
+
+
+--Create a large text string
+local lotsOfText = 'BLAH BLAH'
+
+--Create a text object containing the large text string and insert it into the scrollView
+local lotsOfTextObject = display.newText( lotsOfText, display.contentCenterX, 0, 300, 0, "Helvetica", 14)
+lotsOfTextObject:setFillColor( 0 ) 
+lotsOfTextObject.anchorY = 0.0		-- Top
+--------------------------------lotsOfTextObject:setReferencePoint( display.TopCenterReferencePoint )
+lotsOfTextObject.y = instrText2.y + instrText2.contentHeight + 5
+
+
+helpScreen:insert( lotsOfTextObject )
+scrollView:insert( lotsOfTextObject )
+
+
+editor.ShowHelp = function()
+	print( 'Asked for Edit Help' )
+	if editMode == 'edit' then
+		TransitionToHelp()
+	end
+end
+
+TransitionToEdit()
 return editor

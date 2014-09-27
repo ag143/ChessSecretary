@@ -4,12 +4,13 @@ local lfs = require( "lfs" )
 local gamelist = {}
 gamelist.files = {}
 gamelist.selectedFile = ''
+gamelist.screens = nil
 
 local newFile = false
 labelInfo = {}
 infoButtons = {}
 local lastFileIndex=1
-
+local mode = "gamelist"
 -- 
 -- Abstract: List View sample app
 --  
@@ -35,14 +36,23 @@ local widget = require( "widget" )
 local LEFT_PADDING = 10
 local halfW = display.contentCenterX
 local halfH = display.contentCenterY
-local bannerEnd = 53
-local appOriginY = display.screenOriginY + bannerEnd
 
 --Set the background to white
 display.setDefault( "background", 255/255 )
 
---Create a group to hold our widgets & images
-gamelist.widgetGroup = display.newGroup()
+gamelist.screens = display.newGroup()
+
+--Create a group to hold widgets & images for the game list
+listScreen = display.newGroup()
+gamelist.screens:insert( listScreen )
+
+--Create a group to hold widgets & images for the game info
+infoScreen = display.newGroup()
+gamelist.screens:insert( infoScreen )
+
+--Create a group to hold widgets & images for the help screen
+local helpScreen = display.newGroup()
+gamelist.screens:insert( helpScreen )
 
 local titleGradient = {
 	type = 'gradient',
@@ -74,7 +84,7 @@ local itemSelected = display.newText( "You selected item ", 0, 0, native.systemF
 itemSelected:setFillColor( 0 )
 itemSelected.x = display.contentWidth + itemSelected.contentWidth * 0.5
 itemSelected.y = display.contentCenterY
-gamelist.widgetGroup:insert( itemSelected )
+listScreen:insert( itemSelected )
 ]]
 local itemSelected = ''
 
@@ -90,6 +100,7 @@ gamelist.RemoveInfo = function()
 			infoButtons[hiderow].infoinput = nil
 		end
 	end
+	mode = "gamelist"
 end
 
 gamelist.TransitionToList = function()
@@ -108,7 +119,7 @@ gamelist.TransitionToList = function()
 				infoButtons[hiderow].infoinput = nil
 			end
         end
-        
+        mode = "gamelist"
 end
 
 gamelist.TransitionToItem = function()
@@ -126,6 +137,28 @@ gamelist.TransitionToItem = function()
 		transition.to( infoButtons[hiderow].infodisplay, { alpha = 1, time = 400, transition = easing.outQuad } )
 		transition.to( labelInfo[hiderow], { alpha = 1, time = 400, transition = easing.outQuad } )
 	end
+	mode = "gameinfo"
+end
+
+local function TransitionToHelp()
+	if mode == gameinfo then
+		transition.to( infoScreen, { alpha = 0, time = 400, transition = easing.outQuad } )
+	else
+		transition.to( listScreen, { alpha = 0, time = 400, transition = easing.outQuad } )
+	end
+	transition.to( helpScreen, { alpha = 1, time = 400, transition = easing.outExpo } )
+	mode = 'help'
+end
+
+local function TransitionToEdit()
+	transition.to( helpScreen, { alpha = 0, time = 400, transition = easing.outQuad } )
+	if mode == gameinfo then
+		transition.to( infoScreen, { alpha = 1, time = 400, transition = easing.outExpo } )
+		mode = "gameinfo"
+	else
+		transition.to( listScreen, { alpha = 1, time = 400, transition = easing.outExpo } )
+		mode = "gamelist"
+	end
 end
 
 -------------------------------------------
@@ -139,10 +172,12 @@ function NewInfoButton( iX, iY, iWidth, iHeight, infoText, headingText )
 	
 	infoButton.InfoEntry = function( event )
 
+		native.showAlert( "Error", infoButton.infoinput.text, { "OK" }, nil )
+		
 		if  ( "ended" == event.phase ) or ( "submitted" == event.phase ) then
 			-- This event is called when the user stops editing a field: for example, when they touch a different field
 			-- This event occurs when the user presses the "return" key (if available) on the onscreen keyboard
-			if( infoButton.infoinputinfoinput.text == '' ) then
+			if( infoButton.infoinput.text == '' ) then
 				infoButton.infodisplay:setLabel( 'Not Specified' )
 				gameInfo[infoButton.heading] = ''
 			else
@@ -150,7 +185,6 @@ function NewInfoButton( iX, iY, iWidth, iHeight, infoText, headingText )
 				gameInfo[infoButton.heading] = infoButton.infoinput.text
 			end
 			
-			native.showAlert( "Error", infoButton.infoinput:getLabel(), { "OK" }, nil )
 
 
 			-- Hide keyboard
@@ -214,7 +248,7 @@ gamelist.DisplayInfo = function( inforow, headingtext, infotext )
 								    topUsableY + (inforow*(display.contentHeight/20)),
 								    display.contentWidth/2, 
 								    height, infotext, headingtext ) 
-		gamelist.widgetGroup:insert( infoButtons[inforow].infodisplay )
+		infoScreen:insert( infoButtons[inforow].infodisplay )
 	end
 	infoButtons[inforow].infodisplay:setLabel( infotext )
 		
@@ -225,7 +259,7 @@ gamelist.DisplayInfo = function( inforow, headingtext, infotext )
 		labelInfo[inforow].y = topUsableY + (inforow*(display.contentHeight/20))
 		labelInfo[inforow].anchorX = 0    
 		labelInfo[inforow].anchorY = 0
-		gamelist.widgetGroup:insert( labelInfo[inforow] )
+		infoScreen:insert( labelInfo[inforow] )
 	end
 	labelInfo[inforow].text = headingtext
 end
@@ -299,17 +333,17 @@ list = widget.newTableView
 
 -- Create a background to go behind our tableView
 local bkgndH = 500
-local background = display.newImageRect( gamelist.widgetGroup, "background.png", 320, bkgndH )
+local background = display.newImageRect( listScreen, "background.png", 320, bkgndH )
 background.anchorX = 0
 background.anchorY = 0
 background.y = display.contentHeight - bkgndH + appOriginY
 
 --Insert widgets/images into a group
-gamelist.widgetGroup:insert( list )
+listScreen:insert( list )
 
-gamelist.widgetGroup:insert( titleBar )
-gamelist.widgetGroup:insert( titleText )
-gamelist.widgetGroup:insert( shadow )
+listScreen:insert( titleBar )
+listScreen:insert( titleText )
+listScreen:insert( shadow )
 
 --Handle the edit button release event
 local function onNewRelease()
@@ -354,7 +388,7 @@ newGameButton = widget.newButton
 newGameButton.alpha = 1
 newGameButton.x = display.contentWidth * 0.5
 newGameButton.y = display.contentHeight - newGameButton.contentHeight
-gamelist.widgetGroup:insert( newGameButton )
+listScreen:insert( newGameButton )
 
 --Create the edit button
 editButton = widget.newButton
@@ -369,7 +403,7 @@ editButton.alpha = 0
 editButton.x = display.contentWidth * 0.668
 editButton.y = display.contentHeight - editButton.contentHeight
 editButton.anchorX = 0
-gamelist.widgetGroup:insert( editButton )
+infoScreen:insert( editButton )
 
 backButton = widget.newButton
 {
@@ -383,7 +417,7 @@ backButton.alpha = 0
 backButton.x = 1
 backButton.anchorX = 0
 backButton.y = display.contentHeight - backButton.contentHeight
-gamelist.widgetGroup:insert( backButton )
+infoScreen:insert( backButton )
 
 local function onEmailRelease( event )
 	-- compose an HTML email with two attachments
@@ -425,7 +459,7 @@ emailButton.alpha = 0
 emailButton.anchorX = 0
 emailButton.x = display.contentWidth * 0.334
 emailButton.y = display.contentHeight - emailButton.contentHeight
-gamelist.widgetGroup:insert( emailButton )
+infoScreen:insert( emailButton )
 
 gamelist.FindFiles = function()
 	local doc_path = system.pathForFile( "", system.DocumentsDirectory )
@@ -451,4 +485,71 @@ end
 
 gamelist.FindFiles()
 
+-- Add controls to Help Screen
+local function scrollListener( event )
+	local direction = event.direction
+	
+	-- If the scrollView has reached it's scroll limit
+	if event.limitReached and "left" == direction then
+		TransitionToEdit()
+	end
+			
+	return true
+end
+
+-- Create a ScrollView
+local scrollView = widget.newScrollView
+{
+	left = 0,
+	top = appOriginY,
+	width = display.contentWidth,
+	height = display.contentHeight,
+	bottomPadding = 50,
+	id = "onBottom",
+	horizontalScrollDisabled = false,
+	verticalScrollDisabled = false,
+	listener = scrollListener,
+}
+helpScreen:insert( scrollView )
+
+--Create a text object for the scrollViews title
+local titleText = display.newText("Game List/Info Help", display.contentCenterX, 24, native.systemFontBold, 24)
+titleText:setFillColor( 0 )
+helpScreen:insert( titleText )
+scrollView:insert( titleText )
+
+local instrText1 = display.newText("Scroll Up/Down to Read", display.contentCenterX, 60, native.systemFontBold, 16)
+instrText1.y = titleText.y + titleText.contentHeight + 5
+instrText1:setFillColor( 0 )
+helpScreen:insert( instrText1 )
+scrollView:insert( instrText1 )
+
+local instrText2 = display.newText("Scroll Left/Right to Dismiss", display.contentCenterX, 60, native.systemFontBold, 16)
+instrText2.y = instrText1.y + instrText1.contentHeight + 5
+instrText2:setFillColor( 0 )
+helpScreen:insert( instrText2 )
+scrollView:insert( instrText2 )
+
+
+--Create a large text string
+local lotsOfText = 'BLAH BLAH'
+
+--Create a text object containing the large text string and insert it into the scrollView
+local lotsOfTextObject = display.newText( lotsOfText, display.contentCenterX, 0, 300, 0, "Helvetica", 14)
+lotsOfTextObject:setFillColor( 0 ) 
+lotsOfTextObject.anchorY = 0.0		-- Top
+--------------------------------lotsOfTextObject:setReferencePoint( display.TopCenterReferencePoint )
+lotsOfTextObject.y = instrText2.y + instrText2.contentHeight + 5
+
+helpScreen:insert( lotsOfTextObject )
+scrollView:insert( lotsOfTextObject )
+
+
+gamelist.ShowHelp = function()
+	if mode ~= 'help' then
+		TransitionToHelp()
+	end
+end
+
+TransitionToEdit()
 return gamelist

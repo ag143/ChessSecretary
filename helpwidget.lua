@@ -5,6 +5,73 @@ local widget = require( "widget" )
 helpWidget = {}
 	
 helpWidget.asked4Help = false
+helpWidget.doneWithHelp = false
+helpWidget.helpScreen = display.newGroup()
+
+helpWidget.ShowHelp = function( topY, heading, helptext )
+
+	helpWidget.doneWithHelp = false
+	helpWidget.helpScreen.isVisible = true
+	
+		-- Add controls to Help Screen
+	local function scrollListener( event )
+		local direction = event.direction
+		
+		-- If the scrollView has reached it's scroll limit
+		if event.limitReached and ( "left" == direction or "right" == direction ) then
+			TransitionToEdit()
+			helpWidget.doneWithHelp = true
+			helpWidget.helpScreen.isVisible = false
+		end
+				
+		return true
+	end
+
+	-- Create a ScrollView
+	local scrollView = widget.newScrollView
+	{
+		left = 0,
+		top = topY,
+		width = display.contentWidth,
+		height = display.contentHeight-topY,
+		bottomPadding = 50,
+		id = "onBottom",
+		horizontalScrollDisabled = false,
+		verticalScrollDisabled = false,
+		listener = scrollListener,
+	}
+	helpWidget.helpScreen:insert( scrollView )
+
+	--Create a text object for the scrollViews title
+	local titleText = display.newText( heading, display.contentCenterX, 24, native.systemFontBold, 24)
+	titleText:setFillColor( 0 )
+	helpWidget.helpScreen:insert( titleText )
+	scrollView:insert( titleText )
+
+	local instrText1 = display.newText("Scroll Up/Down to Read", display.contentCenterX, 60, native.systemFontBold, 16)
+	instrText1.y = titleText.y + titleText.contentHeight + 5
+	instrText1:setFillColor( 0 )
+	helpWidget.helpScreen:insert( instrText1 )
+	scrollView:insert( instrText1 )
+
+	local instrText2 = display.newText("Scroll Left/Right to Dismiss", display.contentCenterX, 60, native.systemFontBold, 16)
+	instrText2.y = instrText1.y + instrText1.contentHeight + 5
+	instrText2:setFillColor( 0 )
+	helpWidget.helpScreen:insert( instrText2 )
+	scrollView:insert( instrText2 )
+
+	--Create a text object containing the large text string and insert it into the scrollView
+	local lotsOfTextObject = display.newText( helpText, display.contentCenterX, 0, 300, 0, "Helvetica", 14)
+	lotsOfTextObject:setFillColor( 0 ) 
+	lotsOfTextObject.anchorY = 0.0		-- Top
+	--------------------------------lotsOfTextObject:setReferencePoint( display.TopCenterReferencePoint )
+	lotsOfTextObject.y = instrText2.y + instrText2.contentHeight + 5
+
+
+	helpWidget.helpScreen:insert( lotsOfTextObject )
+	scrollView:insert( lotsOfTextObject )
+	
+end
 
 helpWidget.ShowHelpButton = function( size )
 	bufferedSize = size+5
@@ -42,4 +109,5 @@ helpWidget.AskedForHelp = function()
 	return a4h
 end
 
+helpWidget.helpScreen.isVisible = false
 return helpWidget

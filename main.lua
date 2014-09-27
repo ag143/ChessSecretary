@@ -3,6 +3,8 @@ version = 1.02
 moveCheckVersion = 2.0
 isSimulator = "simulator" == system.getInfo("environment")
 isAndroid = "Android" == system.getInfo( "platformName" )
+bannerEnd = 53
+appOriginY = display.screenOriginY + bannerEnd
 
 
 moveList = {}
@@ -114,45 +116,58 @@ local ads = require "ads"
 ads.init( adNetwork, appID )
 
 local editor = require( 'editscreen' )
-editor.editScreen.isVisible = false
+editor.screens.isVisible = false
 
 local gameList = require( 'gamelist' )
-gameList.widgetGroup.isVisible = true
+gameList.screens.isVisible = true
 
 local help = require( 'helpwidget' )
 help.ShowHelpButton(15)
 
 local state = 'selectgame'
-
---editor.editScreen.isVisible = true
---state = 'editgame'
+local lastState = state
 
 local function appState(event)
-	local a4h = help.AskedForHelp()
-	if a4h then print 'HELP! I need somebody!!' end
+	local a4h = help.AskedForHelp() 
+--~ 	if a4h then 
+--~ 		lastState = state
+--~ 		state = "help" 
+--~ 	end
+--~ 	if state == 'help' then
+--~ 		local title
+--~ 		local helpText
+--~ 		--if lastState
+--~ 		--help.ShowHelp( )
+--~ 		if help.doneWithHelp then
+--~ 		end
+--~ 	else
 	if state == 'selectgame' then
 		if gameList.selectedFile ~= '' then
 			gameList.RemoveInfo()
-			gameList.widgetGroup.isVisible = false
+			gameList.screens.isVisible = false
 			state = 'editgame'
 			editor.editDone = false
 			editor.filename = gameList.selectedFile
 			LoadGame( editor.filename )
 			editor.EditGame()
-			editor.editScreen.isVisible = true
+			editor.screens.isVisible = true
 			--print( 'Going to Edit Mode ' .. gameList.selectedFile )
 			--print( editor.editDone )
+		else
+			if a4h then gameList.ShowHelp() end
 		end
 	elseif state == 'editgame' then
 		if editor.editDone == true then
-			editor.editScreen.isVisible = false
+			editor.screens.isVisible = false
 			state = 'selectgame'
 			gameList.selectedFile = ''
 			gameList.FindFiles()
-			gameList.widgetGroup.isVisible = true
+			gameList.screens.isVisible = true
 			gameList.TransitionToList()
 			--print( 'Going to List Mode ' .. gameList.selectedFile )
 			--print( editor.editDone )
+		else
+			if a4h then editor.ShowHelp() end
 		end
 	end
 end
