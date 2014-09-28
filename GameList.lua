@@ -50,10 +50,6 @@ gamelist.screens:insert( listScreen )
 infoScreen = display.newGroup()
 gamelist.screens:insert( infoScreen )
 
---Create a group to hold widgets & images for the help screen
-local helpScreen = display.newGroup()
-gamelist.screens:insert( helpScreen )
-
 local titleGradient = {
 	type = 'gradient',
 	color1 = { 189/255, 203/255, 220/255, 255/255 }, 
@@ -140,26 +136,15 @@ gamelist.TransitionToItem = function()
 	mode = "gameinfo"
 end
 
-local function TransitionToHelp()
-	if mode == gameinfo then
-		transition.to( infoScreen, { alpha = 0, time = 400, transition = easing.outQuad } )
-	else
-		transition.to( listScreen, { alpha = 0, time = 400, transition = easing.outQuad } )
-	end
-	transition.to( helpScreen, { alpha = 1, time = 400, transition = easing.outExpo } )
-	mode = 'help'
-end
-
-local function TransitionToEdit()
-	transition.to( helpScreen, { alpha = 0, time = 400, transition = easing.outQuad } )
-	if mode == gameinfo then
-		transition.to( infoScreen, { alpha = 1, time = 400, transition = easing.outExpo } )
-		mode = "gameinfo"
-	else
-		transition.to( listScreen, { alpha = 1, time = 400, transition = easing.outExpo } )
-		mode = "gamelist"
-	end
-end
+--~ local function TransitionToEdit()
+--~ 	if mode == gameinfo then
+--~ 		transition.to( infoScreen, { alpha = 1, time = 400, transition = easing.outExpo } )
+--~ 		mode = "gameinfo"
+--~ 	else
+--~ 		transition.to( listScreen, { alpha = 1, time = 400, transition = easing.outExpo } )
+--~ 		mode = "gamelist"
+--~ 	end
+--~ end
 
 -------------------------------------------
 -- Handle the textField keyboard input
@@ -483,73 +468,14 @@ gamelist.FindFiles = function()
 	--print( lastFileIndex )
 end
 
+gamelist.GetHelpInfo = function()
+	if mode == 'gamelist' then
+		return "Game List Help" , "Blah Blah Blah yada yada yada" 
+	end
+	return "Game Info Help" , "Blah Blah Blah yada yada yada" 
+end
+
 gamelist.FindFiles()
+--TransitionToEdit()
 
--- Add controls to Help Screen
-local function scrollListener( event )
-	local direction = event.direction
-	
-	-- If the scrollView has reached it's scroll limit
-	if event.limitReached and "left" == direction then
-		TransitionToEdit()
-	end
-			
-	return true
-end
-
--- Create a ScrollView
-local scrollView = widget.newScrollView
-{
-	left = 0,
-	top = appOriginY,
-	width = display.contentWidth,
-	height = display.contentHeight,
-	bottomPadding = 50,
-	id = "onBottom",
-	horizontalScrollDisabled = false,
-	verticalScrollDisabled = false,
-	listener = scrollListener,
-}
-helpScreen:insert( scrollView )
-
---Create a text object for the scrollViews title
-local titleText = display.newText("Game List/Info Help", display.contentCenterX, 24, native.systemFontBold, 24)
-titleText:setFillColor( 0 )
-helpScreen:insert( titleText )
-scrollView:insert( titleText )
-
-local instrText1 = display.newText("Scroll Up/Down to Read", display.contentCenterX, 60, native.systemFontBold, 16)
-instrText1.y = titleText.y + titleText.contentHeight + 5
-instrText1:setFillColor( 0 )
-helpScreen:insert( instrText1 )
-scrollView:insert( instrText1 )
-
-local instrText2 = display.newText("Scroll Left/Right to Dismiss", display.contentCenterX, 60, native.systemFontBold, 16)
-instrText2.y = instrText1.y + instrText1.contentHeight + 5
-instrText2:setFillColor( 0 )
-helpScreen:insert( instrText2 )
-scrollView:insert( instrText2 )
-
-
---Create a large text string
-local lotsOfText = 'BLAH BLAH'
-
---Create a text object containing the large text string and insert it into the scrollView
-local lotsOfTextObject = display.newText( lotsOfText, display.contentCenterX, 0, 300, 0, "Helvetica", 14)
-lotsOfTextObject:setFillColor( 0 ) 
-lotsOfTextObject.anchorY = 0.0		-- Top
---------------------------------lotsOfTextObject:setReferencePoint( display.TopCenterReferencePoint )
-lotsOfTextObject.y = instrText2.y + instrText2.contentHeight + 5
-
-helpScreen:insert( lotsOfTextObject )
-scrollView:insert( lotsOfTextObject )
-
-
-gamelist.ShowHelp = function()
-	if mode ~= 'help' then
-		TransitionToHelp()
-	end
-end
-
-TransitionToEdit()
 return gamelist

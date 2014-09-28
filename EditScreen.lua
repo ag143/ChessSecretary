@@ -24,7 +24,6 @@ local baseY = display.contentHeight-butnHt
 
 editor.screens = nil
 local editScreen = nil
-local helpScreen = nil
 local editScreenBkgnd = nil
 local numberbuttons = {}
 local letterbuttons = {}
@@ -379,23 +378,6 @@ editor.screens = display.newGroup()
 editScreen = display.newGroup()
 editor.screens:insert( editScreen )
 
--- Setup the Help Screen
-helpScreen = display.newGroup()
-editor.screens:insert( helpScreen )
-
-local function TransitionToHelp()
-	print( 'Edit Help' )
-	transition.to( editScreen, { alpha = 0, time = 400, transition = easing.outQuad } )
-	transition.to( helpScreen, { alpha = 1, time = 400, transition = easing.outExpo } )
-	editMode = 'help'
-end
-
-local function TransitionToEdit()
-	transition.to( helpScreen, { alpha = 0, time = 400, transition = easing.outQuad } )
-	transition.to( editScreen, { alpha = 1, time = 400, transition = easing.outExpo } )
-	editMode = 'edit'
-end
-
 -- Add controls to Edit Screen
 editScreenBkgnd = display.newRect( 0, display.screenOriginY + display.topStatusBarContentHeight, display.actualContentWidth, display.actualContentHeight - display.topStatusBarContentHeight, 18 )
 editScreenBkgnd:setFillColor( 0.25, 0.25, 0.25 )
@@ -510,74 +492,8 @@ function UpdateMoveDisplay()
 --	end
 end
 
-
--- Add controls to Help Screen
-local function scrollListener( event )
-	local direction = event.direction
-	
-	-- If the scrollView has reached it's scroll limit
-	if event.limitReached and ( "left" == direction or "right" == direction ) then
-		TransitionToEdit()
-	end
-			
-	return true
+editor.GetHelpInfo = function()
+	return "Game Edit Help" , "Blah Blah Blah yada yada yada" 
 end
 
--- Create a ScrollView
-local scrollView = widget.newScrollView
-{
-	left = 0,
-	top = appOriginY,
-	width = display.contentWidth,
-	height = display.contentHeight,
-	bottomPadding = 50,
-	id = "onBottom",
-	horizontalScrollDisabled = false,
-	verticalScrollDisabled = false,
-	listener = scrollListener,
-}
-helpScreen:insert( scrollView )
-
---Create a text object for the scrollViews title
-local titleText = display.newText("Game Edit Help", display.contentCenterX, 24, native.systemFontBold, 24)
-titleText:setFillColor( 0 )
-helpScreen:insert( titleText )
-scrollView:insert( titleText )
-
-local instrText1 = display.newText("Scroll Up/Down to Read", display.contentCenterX, 60, native.systemFontBold, 16)
-instrText1.y = titleText.y + titleText.contentHeight + 5
-instrText1:setFillColor( 0 )
-helpScreen:insert( instrText1 )
-scrollView:insert( instrText1 )
-
-local instrText2 = display.newText("Scroll Left/Right to Dismiss", display.contentCenterX, 60, native.systemFontBold, 16)
-instrText2.y = instrText1.y + instrText1.contentHeight + 5
-instrText2:setFillColor( 0 )
-helpScreen:insert( instrText2 )
-scrollView:insert( instrText2 )
-
-
---Create a large text string
-local lotsOfText = 'BLAH BLAH'
-
---Create a text object containing the large text string and insert it into the scrollView
-local lotsOfTextObject = display.newText( lotsOfText, display.contentCenterX, 0, 300, 0, "Helvetica", 14)
-lotsOfTextObject:setFillColor( 0 ) 
-lotsOfTextObject.anchorY = 0.0		-- Top
---------------------------------lotsOfTextObject:setReferencePoint( display.TopCenterReferencePoint )
-lotsOfTextObject.y = instrText2.y + instrText2.contentHeight + 5
-
-
-helpScreen:insert( lotsOfTextObject )
-scrollView:insert( lotsOfTextObject )
-
-
-editor.ShowHelp = function()
-	print( 'Asked for Edit Help' )
-	if editMode == 'edit' then
-		TransitionToHelp()
-	end
-end
-
-TransitionToEdit()
 return editor

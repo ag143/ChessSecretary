@@ -8,25 +8,26 @@ helpWidget.asked4Help = false
 helpWidget.doneWithHelp = false
 helpWidget.helpScreen = display.newGroup()
 
-helpWidget.ShowHelp = function( topY, heading, helptext )
+	-- Add controls to Help Screen
+local function scrollListener( event )
+	local direction = event.direction
+	
+	-- If the scrollView has reached it's scroll limit
+	if event.limitReached and ( "left" == direction or "right" == direction ) then
+		helpWidget.doneWithHelp = true
+		helpWidget.helpScreen.isVisible = false
+	end
+			
+	return true
+end
+
+
+
+helpWidget.ShowHelp = function( topY, heading, helpText )
 
 	helpWidget.doneWithHelp = false
 	helpWidget.helpScreen.isVisible = true
 	
-		-- Add controls to Help Screen
-	local function scrollListener( event )
-		local direction = event.direction
-		
-		-- If the scrollView has reached it's scroll limit
-		if event.limitReached and ( "left" == direction or "right" == direction ) then
-			TransitionToEdit()
-			helpWidget.doneWithHelp = true
-			helpWidget.helpScreen.isVisible = false
-		end
-				
-		return true
-	end
-
 	-- Create a ScrollView
 	local scrollView = widget.newScrollView
 	{
@@ -61,7 +62,7 @@ helpWidget.ShowHelp = function( topY, heading, helptext )
 	scrollView:insert( instrText2 )
 
 	--Create a text object containing the large text string and insert it into the scrollView
-	local lotsOfTextObject = display.newText( helpText, display.contentCenterX, 0, 300, 0, "Helvetica", 14)
+	local lotsOfTextObject = display.newText( helpText, display.contentCenterX, 0, 300, 0, native.systemFont, 14)
 	lotsOfTextObject:setFillColor( 0 ) 
 	lotsOfTextObject.anchorY = 0.0		-- Top
 	--------------------------------lotsOfTextObject:setReferencePoint( display.TopCenterReferencePoint )

@@ -128,20 +128,24 @@ local state = 'selectgame'
 local lastState = state
 
 local function appState(event)
-	local a4h = help.AskedForHelp() 
---~ 	if a4h then 
---~ 		lastState = state
---~ 		state = "help" 
---~ 	end
---~ 	if state == 'help' then
---~ 		local title
---~ 		local helpText
---~ 		--if lastState
---~ 		--help.ShowHelp( )
---~ 		if help.doneWithHelp then
---~ 		end
---~ 	else
-	if state == 'selectgame' then
+	if help.AskedForHelp()  then 
+		lastState = state
+		state = "help" 
+		local title
+		local helpText
+		if lastState == 'selectgame' then
+			title, helpText = gameList.GetHelpInfo()
+		elseif lastState == 'editgame' then
+			title, helpText = editor.GetHelpInfo()
+		end
+		help.ShowHelp( appOriginY, title, helpText )
+	end
+	if state == 'help' then
+		if help.doneWithHelp then
+			state = lastState
+			lastState = 'help'
+		end
+	elseif state == 'selectgame' then
 		if gameList.selectedFile ~= '' then
 			gameList.RemoveInfo()
 			gameList.screens.isVisible = false
@@ -153,8 +157,6 @@ local function appState(event)
 			editor.screens.isVisible = true
 			--print( 'Going to Edit Mode ' .. gameList.selectedFile )
 			--print( editor.editDone )
-		else
-			if a4h then gameList.ShowHelp() end
 		end
 	elseif state == 'editgame' then
 		if editor.editDone == true then
