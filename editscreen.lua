@@ -225,7 +225,7 @@ editor.EditGame = function()
 	moveListDisplay:deleteAllRows()
 	while moveNum <= #moveList do
 		currMove = moveList[moveNum][moveColor]
-		print( moveNum, moveColor, currMove )
+		--print( moveNum, moveColor, currMove )
 		if currMove ~= nil and currMove ~= '' then
 			AddMove( true )
 		end

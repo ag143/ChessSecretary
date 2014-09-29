@@ -1,5 +1,5 @@
 --Global Variables
-version = 1.02
+version = 1.03
 moveCheckVersion = 2.0
 isSimulator = "simulator" == system.getInfo("environment")
 isAndroid = "Android" == system.getInfo( "platformName" )
@@ -19,9 +19,7 @@ gameInfo =
 	Result = '',
 	WhiteElo = '',
 	BlackElo = '',
-	Source = 'ChessSec',
-	EventDate = '',
-	TimeSpend = '',
+	Source = 'ChessNotes',
 }
 
 function GetMoveListPGN()
@@ -87,25 +85,14 @@ end
 
 function SaveGame( filename )
 	local filePath = system.pathForFile( filename, system.DocumentsDirectory )
-	print( filePath )
+	--print( filePath )
 	file = io.open( filePath, "w" )
-	WriteGameInfo( 'Event', '' )
-	WriteGameInfo( 'Site', '' )
-	WriteGameInfo( 'Date', '' )
-	WriteGameInfo( 'Round', '' )
-	WriteGameInfo( 'White', '' )
-	WriteGameInfo( 'Black', '' )
-	WriteGameInfo( 'Result', '' )
-	WriteGameInfo( 'WhiteElo', '' )
-	WriteGameInfo( 'BlackElo', '' )
-	WriteGameInfo( 'Source', 'ChessSec' )
-	WriteGameInfo( 'EventDate', '' )
-	WriteGameInfo( 'TimeSpend', '' )
+ 	for heading, info in pairs(gameInfo) do
+		WriteGameInfo( heading, info )
+ 	end
 	local moves = GetMoveListPGN()
-	--moves = string:gsub( moves, '\n', ' ' )
 	file:write( moves )
 	io.close( file )
-	--print( editor.GatherMoves() )
 end
 
 

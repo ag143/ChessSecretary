@@ -74,14 +74,6 @@ shadow.x, shadow.y = 0, titleBar.y + titleBar.contentHeight * 0.5
 shadow.xScale = display.contentWidth / shadow.contentWidth
 shadow.alpha = 0.45
 
---Text to show which item we selected
---[[
-local itemSelected = display.newText( "You selected item ", 0, 0, native.systemFontBold, 28 )
-itemSelected:setFillColor( 0 )
-itemSelected.x = display.contentWidth + itemSelected.contentWidth * 0.5
-itemSelected.y = display.contentCenterY
-listScreen:insert( itemSelected )
-]]
 local itemSelected = ''
 
 -- Forward reference for our edit button & tableview
@@ -89,6 +81,13 @@ local list, editButton, backButton
 
 gamelist.RemoveInfo = function()
 	for hiderow=1,#infoButtons do
+		if infoButtons[hiderow].heading ~= 'Game' then
+			if( infoButtons[hiderow].infodisplay:getLabel() == 'Not Specified' ) then
+				gameInfo[infoButtons[hiderow].heading] = ''
+			else
+				gameInfo[infoButtons[hiderow].heading] = infoButtons[hiderow].infodisplay:getLabel()
+			end
+		end
 		transition.to( labelInfo[hiderow], { alpha = 0, time = 400, transition = easing.outQuad } )
 		transition.to( infoButtons[hiderow].infodisplay, { alpha = 0, time = 400, transition = easing.outQuad } )
 		if( infoButtons[hiderow].infoinput ) then
@@ -107,15 +106,15 @@ gamelist.TransitionToList = function()
 	transition.to( editButton, { alpha = 0, time = 400, transition = easing.outQuad } )
 	transition.to( emailButton, { alpha = 0, time = 400, transition = easing.outQuad } )
 	transition.to( backButton, { alpha = 0, time = 400, transition = easing.outQuad } )
-        for hiderow=1,#infoButtons do
-			transition.to( infoButtons[hiderow].infodisplay, { alpha = 0, time = 400, transition = easing.outQuad } )
-			transition.to( labelInfo[hiderow], { alpha = 0, time = 400, transition = easing.outQuad } )
-			if( infoButtons[hiderow].infoinput ) then
-				infoButtons[hiderow].infoinput:removeSelf()
-				infoButtons[hiderow].infoinput = nil
-			end
-        end
-        mode = "gamelist"
+	for hiderow=1,#infoButtons do
+		transition.to( infoButtons[hiderow].infodisplay, { alpha = 0, time = 400, transition = easing.outQuad } )
+		transition.to( labelInfo[hiderow], { alpha = 0, time = 400, transition = easing.outQuad } )
+		if( infoButtons[hiderow].infoinput ) then
+			infoButtons[hiderow].infoinput:removeSelf()
+			infoButtons[hiderow].infoinput = nil
+		end
+	end
+	mode = "gamelist"
 end
 
 gamelist.TransitionToItem = function()
@@ -136,16 +135,6 @@ gamelist.TransitionToItem = function()
 	mode = "gameinfo"
 end
 
---~ local function TransitionToEdit()
---~ 	if mode == gameinfo then
---~ 		transition.to( infoScreen, { alpha = 1, time = 400, transition = easing.outExpo } )
---~ 		mode = "gameinfo"
---~ 	else
---~ 		transition.to( listScreen, { alpha = 1, time = 400, transition = easing.outExpo } )
---~ 		mode = "gamelist"
---~ 	end
---~ end
-
 -------------------------------------------
 -- Handle the textField keyboard input
 --
@@ -157,17 +146,18 @@ function NewInfoButton( iX, iY, iWidth, iHeight, infoText, headingText )
 	
 	infoButton.InfoEntry = function( event )
 
-		native.showAlert( "Error", infoButton.infoinput.text, { "OK" }, nil )
-		
+		--native.showAlert( 'Phase', event.phase, { "OK" }, nil )
+
 		if  ( "ended" == event.phase ) or ( "submitted" == event.phase ) then
+			--native.showAlert( infoButton.heading, infoButton.infoinput.text, { "OK" }, nil )
 			-- This event is called when the user stops editing a field: for example, when they touch a different field
 			-- This event occurs when the user presses the "return" key (if available) on the onscreen keyboard
 			if( infoButton.infoinput.text == '' ) then
 				infoButton.infodisplay:setLabel( 'Not Specified' )
-				gameInfo[infoButton.heading] = ''
+				--gameInfo[infoButton.heading] = ''
 			else
 				infoButton.infodisplay:setLabel( infoButton.infoinput.text )
-				gameInfo[infoButton.heading] = infoButton.infoinput.text
+				--gameInfo[infoButton.heading] = infoButton.infoinput.text
 			end
 			
 
@@ -189,10 +179,12 @@ function NewInfoButton( iX, iY, iWidth, iHeight, infoText, headingText )
 
 		infoButton.infoinput = native.newTextField( infoButton.infodisplay.x, infoButton.infodisplay.y, infoButton.infodisplay.width*0.9, infoButton.infodisplay.height )
 		infoButton.infoinput.anchorX = 0
+		infoButton.infoinput.anchorY = 0
 		infoButton.infoinput.font = native.newFont( native.systemFontBold, inputFontSize )		
 		if infoButton.infodisplay:getLabel() ~= 'Not Specified' then
 			infoButton.infoinput.text = infoButton.infodisplay:getLabel()
 		end
+		native.setKeyboardFocus( infoButton.infoinput )
 		--local handlerName = headingtext .. 'Handler'
 		infoButton.infoinput:addEventListener( "userInput", infoButton.InfoEntry )
 		
@@ -221,13 +213,14 @@ gamelist.DisplayInfo = function( inforow, headingtext, infotext )
 	if infotext == nil or infotext == '' then
 		infotext = 'Not Specified'
 	end
+
+	height = 30
+	if( isAndroid ) then
+		height = 40
+	end
+		
 	--print( inforow, infotext )
 	if infoButtons[inforow] == nil then 
-		local height = 30
-		if( isAndroid ) then
-			height = 40
-		end
-			
 		infoButtons[inforow] = {}
 		infoButtons[inforow] = NewInfoButton(  display.contentWidth/2, 
 								    topUsableY + (inforow*(display.contentHeight/20)),
@@ -238,7 +231,7 @@ gamelist.DisplayInfo = function( inforow, headingtext, infotext )
 	infoButtons[inforow].infodisplay:setLabel( infotext )
 		
 	if labelInfo[inforow] == nil then
-		labelInfo[inforow] = display.newText( headingtext, 0,0, "Arial", 14 )
+		labelInfo[inforow] = display.newText( headingtext, 0,0, display.contentWidth/2.1, height, "Arial", 14 )
 		labelInfo[inforow]:setFillColor( 0.2, .2, .2 )
 		labelInfo[inforow].x = 10
 		labelInfo[inforow].y = topUsableY + (inforow*(display.contentHeight/20))
@@ -353,6 +346,15 @@ end
 --Handle the edit button release event
 local function onBackRelease()
 	--Transition in the list, transition out the item selected text and the edit button
+	for hiderow=1,#infoButtons do
+		if infoButtons[hiderow].heading ~= 'Game' then
+			if infoButtons[hiderow].infodisplay:getLabel() == 'Not Specified' then
+				gameInfo[infoButtons[hiderow].heading] = ''
+			else
+				gameInfo[infoButtons[hiderow].heading] = infoButtons[hiderow].infodisplay:getLabel()
+			end
+		end
+	end
 	SaveGame( itemSelected )
 	itemSelected = '' 
 	gamelist.FindFiles()
@@ -368,7 +370,7 @@ newGameButton = widget.newButton
 	height = buttonHeight,
 	label = "New Game", 
 	labelYOffset = - 1,
-	onRelease = onNewRelease
+	onRelease = onNewRelease,
 }
 newGameButton.alpha = 1
 newGameButton.x = display.contentWidth * 0.5
@@ -468,14 +470,65 @@ gamelist.FindFiles = function()
 	--print( lastFileIndex )
 end
 
+local gamelisthelptext = [[
+This screen lists the current games that you have saved. Here, you can choose to add a new game or edit a current game. Scroll up and down by swiping up or down on your phone.
+
+To add a new game use the "New Game" button. Games are named automatically and sequentially and cannot be renamed at this time.
+
+To edit a game that you have saved touch the row on which the game is listed. This will take you to the Game Information screen.'
+]]
+
+
+local gameinfohelptext = [[
+This screen shows you information about the selected game. 
+
+From this screen you can choose to edit the Move List of the game by selecting the "Edit" button.
+
+You can send a copy of the PGN file for this game using the "Email" button. You need an email account and a default email app to do this. Your phone also needs to have an active internet connection (wireless or cellular).
+
+On this screen you can also edit information about the game. To edit any of the unlocked information select the current value of that field and type in the new information. The following information is stored for each game in addition to moves that were made in the game:
+
+Game:  
+Name of the game file stored on your phone. This information locked and cannot be changed.
+
+Source:  
+Specifies the program that generated the chess game. This information is locked and cannot be changed and is set to "ChessNotes"
+
+Event: 
+Name of the tournament where this game was played. This information is optional. For Example: Utah Elementary Scholastic Championship
+
+Site:  
+Location where the tournament was played. This information is optional. For Example: University of Utah
+
+Date:  
+The date on which the game was played. The date is expected in the YYYY.MM.DD format. This information is optional. For Example: 2014.03.05
+
+Round:  
+The round number of this game. This is relevant in a multi-round tournament. For Example: 3
+
+White:  
+Name of the player that was playing White pieces. For Example: Vishwanathan Anand
+
+Black:  
+Name of the player that was playing Black pieces. For Example: Magnus Carlson
+
+Result: 
+Specifes the result of the game. It can be one of three values. 1-0, 0-1, 1/2-1/2 indicating in order - White won, Black won, Draw.
+
+WhiteElo:  
+Rating of the player playing White pieces. This is a number between 100 - 2900. For Example: 1400
+
+BlackElo:  
+Rating of the player playing Black pieces. This is a number between 100 - 2900. For Example: 1400
+]]
+
 gamelist.GetHelpInfo = function()
 	if mode == 'gamelist' then
-		return "Game List Help" , "Blah Blah Blah yada yada yada" 
+		return "Game List Help" , gamelisthelptext
 	end
-	return "Game Info Help" , "Blah Blah Blah yada yada yada" 
+	return "Game Info Help" , gameinfohelptext
 end
 
 gamelist.FindFiles()
---TransitionToEdit()
 
 return gamelist
