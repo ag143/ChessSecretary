@@ -7,6 +7,8 @@ helpWidget = {}
 helpWidget.asked4Help = false
 helpWidget.doneWithHelp = false
 helpWidget.helpScreen = display.newGroup()
+helpWidget.helpButton = nil
+helpWidget.myCircle = nil
 
 	-- Add controls to Help Screen
 local function scrollListener( event )
@@ -16,6 +18,9 @@ local function scrollListener( event )
 	if event.limitReached and ( "left" == direction or "right" == direction ) then
 		helpWidget.doneWithHelp = true
 		helpWidget.helpScreen.isVisible = false
+		helpWidget.helpButton:setEnabled( true )
+		helpWidget.helpButton.alpha = 1.0
+		helpWidget.myCircle.alpha = 1.0
 	end
 			
 	return true
@@ -27,6 +32,9 @@ helpWidget.ShowHelp = function( topY, heading, helpText )
 
 	helpWidget.doneWithHelp = false
 	helpWidget.helpScreen.isVisible = true
+	helpWidget.helpButton:setEnabled( false )
+	helpWidget.helpButton.alpha = 0.1
+	helpWidget.myCircle.alpha = 0.1
 	
 	-- Create a ScrollView
 	local scrollView = widget.newScrollView
@@ -49,13 +57,13 @@ helpWidget.ShowHelp = function( topY, heading, helpText )
 	helpWidget.helpScreen:insert( titleText )
 	scrollView:insert( titleText )
 
-	local instrText1 = display.newText("Scroll Up/Down to Read", display.contentCenterX, 60, native.systemFontBold, 16)
-	instrText1.y = titleText.y + titleText.contentHeight + 5
+	local instrText1 = display.newText("--- Scroll Up/Down to Read ---", display.contentCenterX, 60, native.systemFontBold, 16)
+	instrText1.y = titleText.y + titleText.contentHeight + 10
 	instrText1:setFillColor( 0 )
 	helpWidget.helpScreen:insert( instrText1 )
 	scrollView:insert( instrText1 )
 
-	local instrText2 = display.newText("Scroll Left/Right to Dismiss", display.contentCenterX, 60, native.systemFontBold, 16)
+	local instrText2 = display.newText("--- Scroll Left/Right to Dismiss ---", display.contentCenterX, 60, native.systemFontBold, 16)
 	instrText2.y = instrText1.y + instrText1.contentHeight + 5
 	instrText2:setFillColor( 0 )
 	helpWidget.helpScreen:insert( instrText2 )
@@ -66,7 +74,7 @@ helpWidget.ShowHelp = function( topY, heading, helpText )
 	lotsOfTextObject:setFillColor( 0 ) 
 	lotsOfTextObject.anchorY = 0.0		-- Top
 	--------------------------------lotsOfTextObject:setReferencePoint( display.TopCenterReferencePoint )
-	lotsOfTextObject.y = instrText2.y + instrText2.contentHeight + 5
+	lotsOfTextObject.y = instrText2.y + instrText2.contentHeight + 10
 
 
 	helpWidget.helpScreen:insert( lotsOfTextObject )
@@ -76,10 +84,10 @@ end
 
 helpWidget.ShowHelpButton = function( size )
 	bufferedSize = size+5
-	myCircle = display.newCircle( display.contentWidth - bufferedSize, display.contentHeight - bufferedSize, size )
-	myCircle:setFillColor( 0.6, 0.9, 0.4, 0.6 )
-	myCircle.strokeWidth = bufferedSize/10
-	myCircle:setStrokeColor( 0, 0.9, 0 )
+	helpWidget.myCircle = display.newCircle( display.contentWidth - bufferedSize, display.contentHeight - bufferedSize, size )
+	helpWidget.myCircle:setFillColor( 0.6, 0.9, 0.4, 0.6 )
+	helpWidget.myCircle.strokeWidth = bufferedSize/10
+	helpWidget.myCircle:setStrokeColor( 0, 0.9, 0 )
 	
 	-- Function to handle button events
 	local function handleButtonEvent( event )
@@ -88,20 +96,20 @@ helpWidget.ShowHelpButton = function( size )
 		end
 	end
 
-	helpButton = widget.newButton
+	helpWidget.helpButton = widget.newButton
 	{			
 		label = '?',
-		emboss = true,
+		emboss = false,
 		width = bufferedSize*2,
 		height = bufferedSize*2,
 		labelColor = { default={ 0, 0, 0 }, over={ 1, 0, 0 } },
 		fillColor = { default={ 1, 1, 1, 0 }, over={ 1, 1, 1, 0 } },
 		onEvent = handleButtonEvent,
 	}
-	helpButton.x = display.contentWidth - bufferedSize*2
-	helpButton.y = display.contentHeight - bufferedSize*2
-	helpButton.anchorX = 0
-	helpButton.anchorY = 0
+	helpWidget.helpButton.x = display.contentWidth - bufferedSize*2
+	helpWidget.helpButton.y = display.contentHeight - bufferedSize*2
+	helpWidget.helpButton.anchorX = 0
+	helpWidget.helpButton.anchorY = 0
 end
 
 helpWidget.AskedForHelp = function()
