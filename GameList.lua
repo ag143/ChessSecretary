@@ -187,6 +187,7 @@ function NewInfoButton( iX, iY, iWidth, iHeight, infoText, headingText )
 			if infoButton.infodisplay:getLabel() ~= 'Not Specified' then
 				infoButton.infoinput.text = infoButton.infodisplay:getLabel()
 			end
+			infoButton.infoinput.inputType = gameInfoType[headingText]
 			native.setKeyboardFocus( infoButton.infoinput )
 			--local handlerName = headingtext .. 'Handler'
 			infoButton.infoinput:addEventListener( "userInput", infoButton.InfoEntry )
@@ -203,9 +204,10 @@ function NewInfoButton( iX, iY, iWidth, iHeight, infoText, headingText )
 		labelYOffset = - 1,
 		onRelease = onInfoButtonRelease
 	}
+	if gameInfoType[headingText] == nil then
+		infoButton.infodisplay:setEnabled( false )
+	end
 	infoButton.infodisplay.alpha = 1
-	--infoButton.x = x
-	--infoButton.y = y
 	infoButton.infodisplay.anchorX = 0
 	infoButton.infodisplay.anchorY = 0
 	return infoButton

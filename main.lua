@@ -24,16 +24,15 @@ gameInfo =
 
 gameInfoType = 
 {
-	Event = 'string',
-	Site = 'string',
-	Date = 'date',
+	Event = 'default',
+	Site = 'default',
+	Date = 'default',
 	Round = 'number',
-	White = 'string',
-	Black = 'string',
-	Result = 'string',
+	White = 'default',
+	Black = 'default',
+	Result = 'default',
 	WhiteElo = 'number',
 	BlackElo = 'number',
-	Source = 'locked',
 }
 
 function GetMoveListPGN()
