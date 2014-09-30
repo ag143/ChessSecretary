@@ -172,22 +172,25 @@ function NewInfoButton( iX, iY, iWidth, iHeight, infoText, headingText )
 	
 	local onInfoButtonRelease = function()
 
-		local inputFontSize = 14
-		if ( isAndroid ) then
-			inputFontSize = inputFontSize - 4
-		end
+		if isSimulator then
+			infoButton.infodisplay:setLabel( 'Changed' )
+		else
+			local inputFontSize = 14
+			if ( isAndroid ) then
+				inputFontSize = inputFontSize - 4
+			end
 
-		infoButton.infoinput = native.newTextField( infoButton.infodisplay.x, infoButton.infodisplay.y, infoButton.infodisplay.width*0.9, infoButton.infodisplay.height )
-		infoButton.infoinput.anchorX = 0
-		infoButton.infoinput.anchorY = 0
-		infoButton.infoinput.font = native.newFont( native.systemFontBold, inputFontSize )		
-		if infoButton.infodisplay:getLabel() ~= 'Not Specified' then
-			infoButton.infoinput.text = infoButton.infodisplay:getLabel()
+			infoButton.infoinput = native.newTextField( infoButton.infodisplay.x, infoButton.infodisplay.y, infoButton.infodisplay.width*0.9, infoButton.infodisplay.height )
+			infoButton.infoinput.anchorX = 0
+			infoButton.infoinput.anchorY = 0
+			infoButton.infoinput.font = native.newFont( native.systemFontBold, inputFontSize )		
+			if infoButton.infodisplay:getLabel() ~= 'Not Specified' then
+				infoButton.infoinput.text = infoButton.infodisplay:getLabel()
+			end
+			native.setKeyboardFocus( infoButton.infoinput )
+			--local handlerName = headingtext .. 'Handler'
+			infoButton.infoinput:addEventListener( "userInput", infoButton.InfoEntry )
 		end
-		native.setKeyboardFocus( infoButton.infoinput )
-		--local handlerName = headingtext .. 'Handler'
-		infoButton.infoinput:addEventListener( "userInput", infoButton.InfoEntry )
-		
 	end
 	
 	infoButton.infodisplay = widget.newButton
@@ -335,6 +338,17 @@ end
 --Handle the edit button release event
 local function onEditRelease()
 	--Transition in the list, transition out the item selected text and the edit button
+	--print( 'INFO DISPLAY' )
+	for hiderow=1,#infoButtons do
+		if infoButtons[hiderow].heading ~= 'Game' then
+			--print( infoButtons[hiderow].heading, infoButtons[hiderow].infodisplay:getLabel() )
+			if infoButtons[hiderow].infodisplay:getLabel() == 'Not Specified' then
+				gameInfo[infoButtons[hiderow].heading] = ''
+			else
+				gameInfo[infoButtons[hiderow].heading] = infoButtons[hiderow].infodisplay:getLabel()
+			end
+		end
+	end
 	if newFile == true then
 		gamelist.files[#gamelist.files + 1] = gamelist.selectedFile
 		list:insertRow({ rowHeight = 40,  rowColor = { default={ 1, 1, 1, 0 }, over={ 1, 1, 1, 0.2 } }})
@@ -346,8 +360,10 @@ end
 --Handle the edit button release event
 local function onBackRelease()
 	--Transition in the list, transition out the item selected text and the edit button
+	--print( 'INFO DISPLAY' )
 	for hiderow=1,#infoButtons do
 		if infoButtons[hiderow].heading ~= 'Game' then
+			--print( infoButtons[hiderow].heading, infoButtons[hiderow].infodisplay:getLabel() )
 			if infoButtons[hiderow].infodisplay:getLabel() == 'Not Specified' then
 				gameInfo[infoButtons[hiderow].heading] = ''
 			else
@@ -355,6 +371,10 @@ local function onBackRelease()
 			end
 		end
 	end
+--~ 	print( 'GAME INFO' )
+--~ 	for heading, info in pairs(gameInfo) do
+--~ 		print( heading, info )
+--~ 	end	
 	SaveGame( itemSelected )
 	itemSelected = '' 
 	gamelist.FindFiles()

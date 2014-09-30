@@ -1,5 +1,5 @@
 --Global Variables
-version = 1.03
+version = 1.04
 moveCheckVersion = 2.0
 isSimulator = "simulator" == system.getInfo("environment")
 isAndroid = "Android" == system.getInfo( "platformName" )
@@ -20,6 +20,20 @@ gameInfo =
 	WhiteElo = '',
 	BlackElo = '',
 	Source = 'ChessNotes',
+}
+
+gameInfoType = 
+{
+	Event = 'string',
+	Site = 'string',
+	Date = 'date',
+	Round = 'number',
+	White = 'string',
+	Black = 'string',
+	Result = 'string',
+	WhiteElo = 'number',
+	BlackElo = 'number',
+	Source = 'locked',
 }
 
 function GetMoveListPGN()
@@ -49,12 +63,10 @@ function LoadGame( filename )
 	if file then
 		local moveNum = 1
 		for line in file:lines() do
-			if line:find('^%[.*%]$' ) then -- game info
-				local s,e, heading, info = line:find( '^%[([^" ]*)"([^"]*)"%]$' )
-				if s ~= nil then
-					gameInfo[heading] = info	
-					--print( '[' .. heading .. ' "' .. info .. '"]' )
-				end
+			local s,e, heading, info = line:find( '^%[([^ ]*) "([^"]*)"%]$' )
+			if heading then -- game info
+				gameInfo[heading] = info	
+				--print( '[' .. heading .. ' "' .. info .. '"]' )
 			else -- moves
 				local s,e, wMove, bMove = line:find( '%d%. ([^ ]*) (.*)$' )
 				if wMove ~= nil then
@@ -87,7 +99,9 @@ function SaveGame( filename )
 	local filePath = system.pathForFile( filename, system.DocumentsDirectory )
 	--print( filePath )
 	file = io.open( filePath, "w" )
+	--print( 'SAVE GAME' )
  	for heading, info in pairs(gameInfo) do
+		--print( heading, info )
 		WriteGameInfo( heading, info )
  	end
 	local moves = GetMoveListPGN()
@@ -139,7 +153,6 @@ local function appState(event)
 			state = 'editgame'
 			editor.editDone = false
 			editor.filename = gameList.selectedFile
-			LoadGame( editor.filename )
 			editor.EditGame()
 			editor.screens.isVisible = true
 			--print( 'Going to Edit Mode ' .. gameList.selectedFile )
