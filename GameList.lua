@@ -13,18 +13,6 @@ local lastFileIndex=1
 local mode = "gamelist"
 local out = false
 
-local resultData = 
-{ 
-	{ 
-		align = "center",
-		width = 2*display.contentWidth/3,
-		startIndex = 1,
-		labels = 
-		{
-			'1/2-1/2', '1-0', '0-1'
-		},
-	},
-}
 -- 
 -- Abstract: List View sample app
 --  
