@@ -57,15 +57,15 @@ helpWidget.ShowHelp = function( topY, heading, helpText )
 	helpWidget.helpScreen:insert( titleText )
 	scrollView:insert( titleText )
 
-	local instrText1 = display.newText("--- Scroll Up/Down to Read ---", display.contentCenterX, 60, native.systemFontBold, 16)
+	local instrText1 = display.newText("<<<< Scroll Left/Right to Dismiss >>>>", display.contentCenterX, 60, native.systemFontBold, 16)
 	instrText1.y = titleText.y + titleText.contentHeight + 10
-	instrText1:setFillColor( 0 )
+	instrText1:setFillColor( 0.9, 0.1, 0.1 )
 	helpWidget.helpScreen:insert( instrText1 )
 	scrollView:insert( instrText1 )
 
-	local instrText2 = display.newText("--- Scroll Left/Right to Dismiss ---", display.contentCenterX, 60, native.systemFontBold, 16)
+	local instrText2 = display.newText( '++++ Scroll Up/Down to Read ++++', display.contentCenterX, 60, native.systemFontBold, 16)
 	instrText2.y = instrText1.y + instrText1.contentHeight + 5
-	instrText2:setFillColor( 0 )
+	instrText2:setFillColor( 0.0, 0.2, 0.9 )
 	helpWidget.helpScreen:insert( instrText2 )
 	scrollView:insert( instrText2 )
 

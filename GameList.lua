@@ -11,6 +11,20 @@ labelInfo = {}
 infoButtons = {}
 local lastFileIndex=1
 local mode = "gamelist"
+local out = false
+
+local resultData = 
+{ 
+	{ 
+		align = "center",
+		width = 2*display.contentWidth/3,
+		startIndex = 1,
+		labels = 
+		{
+			'1/2-1/2', '1-0', '0-1'
+		},
+	},
+}
 -- 
 -- Abstract: List View sample app
 --  
@@ -138,11 +152,44 @@ end
 -------------------------------------------
 -- Handle the textField keyboard input
 --
-function NewInfoButton( iX, iY, iWidth, iHeight, infoText, headingText )
+function NewInfoButton( iX, index, iWidth, iHeight, infoText, headingText )
 	local infoButton = {}
 	infoButton.infoinput = nil
 	infoButton.infodisplay = nil
 	infoButton.heading = headingText
+	infoButton.index = index
+	
+	
+	local transitionOut = function()
+		for hiderow=1,#infoButtons do
+			if hiderow == infoButton.index then
+				transition.to( labelInfo[hiderow], { y=topUsableY + (display.contentHeight/20), time = 400, transition = easing.outQuad } )
+				if isSimulator then
+					transition.to( infoButtons[hiderow].infodisplay, { y=topUsableY + (display.contentHeight/20), alpha = 0.2, time = 400, transition = easing.outQuad } )
+				else
+					transition.to( infoButtons[hiderow].infodisplay, { y=topUsableY + (display.contentHeight/20), alpha = 0, time = 400, transition = easing.outQuad } )
+					transition.to( infoButtons[hiderow].infoinput, { y=topUsableY + (display.contentHeight/20), time = 400, transition = easing.outQuad } )
+				end
+			else
+				transition.to( labelInfo[hiderow], { x=-labelInfo[hiderow].contentWidth*.5, alpha = 0, time = 400, transition = easing.outQuad } )
+				transition.to( infoButtons[hiderow].infodisplay, { x=display.contentWidth, alpha = 0, time = 400, transition = easing.outQuad } )
+			end
+		end
+		out = true
+	end
+	
+	local transitionIn = function()
+		for hiderow=1,#infoButtons do
+			if hiderow == infoButton.index then
+				transition.to( labelInfo[hiderow], { y=topUsableY + (hiderow*(display.contentHeight/20)), time = 400, transition = easing.outQuad } )
+				transition.to( infoButtons[hiderow].infodisplay, { y=topUsableY + (hiderow*(display.contentHeight/20)), alpha = 1, time = 400, transition = easing.outQuad } )
+			else
+				transition.to( labelInfo[hiderow], { x=10, alpha = 1, time = 400, transition = easing.outQuad } )
+				transition.to( infoButtons[hiderow].infodisplay, { x=display.contentWidth/3, alpha = 1, time = 400, transition = easing.outQuad } )
+			end
+		end
+		out = false
+	end
 	
 	infoButton.InfoEntry = function( event )
 
@@ -160,19 +207,23 @@ function NewInfoButton( iX, iY, iWidth, iHeight, infoText, headingText )
 				--gameInfo[infoButton.heading] = infoButton.infoinput.text
 			end
 			
-
-
 			-- Hide keyboard
 			native.setKeyboardFocus( nil )
 			--print(' Now removing infoinput' )
 			infoButton.infoinput:removeSelf()
 			infoButton.infoinput = nil
+			transitionIn()
 		end
 	end
 	
 	local onInfoButtonRelease = function()
-
+	
 		if isSimulator then
+			if out then
+				transitionIn()
+			else
+				transitionOut()
+			end	
 			infoButton.infodisplay:setLabel( 'Changed' )
 		else
 			local inputFontSize = 14
@@ -180,7 +231,7 @@ function NewInfoButton( iX, iY, iWidth, iHeight, infoText, headingText )
 				inputFontSize = inputFontSize - 4
 			end
 
-			infoButton.infoinput = native.newTextField( infoButton.infodisplay.x, infoButton.infodisplay.y, infoButton.infodisplay.width*0.9, infoButton.infodisplay.height )
+			infoButton.infoinput = native.newTextField( infoButton.infodisplay.x, infoButton.infodisplay.y, infoButton.infodisplay.width, infoButton.infodisplay.height )
 			infoButton.infoinput.anchorX = 0
 			infoButton.infoinput.anchorY = 0
 			infoButton.infoinput.font = native.newFont( native.systemFontBold, inputFontSize )		
@@ -188,6 +239,7 @@ function NewInfoButton( iX, iY, iWidth, iHeight, infoText, headingText )
 				infoButton.infoinput.text = infoButton.infodisplay:getLabel()
 			end
 			infoButton.infoinput.inputType = gameInfoType[headingText]
+			transitionOut()
 			native.setKeyboardFocus( infoButton.infoinput )
 			--local handlerName = headingtext .. 'Handler'
 			infoButton.infoinput:addEventListener( "userInput", infoButton.InfoEntry )
@@ -197,7 +249,7 @@ function NewInfoButton( iX, iY, iWidth, iHeight, infoText, headingText )
 	infoButton.infodisplay = widget.newButton
 	{
 		x = iX,
-		y = iY,
+		y = topUsableY + (infoButton.index*(display.contentHeight/20)),
 		width = iWidth,
 		height = iHeight,
 		label = infoText, 
@@ -227,9 +279,9 @@ gamelist.DisplayInfo = function( inforow, headingtext, infotext )
 	--print( inforow, infotext )
 	if infoButtons[inforow] == nil then 
 		infoButtons[inforow] = {}
-		infoButtons[inforow] = NewInfoButton(  display.contentWidth/2, 
-								    topUsableY + (inforow*(display.contentHeight/20)),
-								    display.contentWidth/2, 
+		infoButtons[inforow] = NewInfoButton(  display.contentWidth/3, 
+								    inforow,
+								    2*display.contentWidth/3, 
 								    height, infotext, headingtext ) 
 		infoScreen:insert( infoButtons[inforow].infodisplay )
 	end
@@ -410,7 +462,7 @@ editButton = widget.newButton
 }
 editButton.alpha = 0
 editButton.x = display.contentWidth * 0.668
-editButton.y = display.contentHeight - editButton.contentHeight
+editButton.y = display.contentHeight - editButton.contentHeight - ( buttonHeight / 2 )
 editButton.anchorX = 0
 infoScreen:insert( editButton )
 
@@ -425,7 +477,7 @@ backButton = widget.newButton
 backButton.alpha = 0
 backButton.x = 1
 backButton.anchorX = 0
-backButton.y = display.contentHeight - backButton.contentHeight
+backButton.y = display.contentHeight - backButton.contentHeight - ( buttonHeight / 2 )
 infoScreen:insert( backButton )
 
 local function onEmailRelease( event )
@@ -467,7 +519,7 @@ emailButton = widget.newButton
 emailButton.alpha = 0
 emailButton.anchorX = 0
 emailButton.x = display.contentWidth * 0.334
-emailButton.y = display.contentHeight - emailButton.contentHeight
+emailButton.y = display.contentHeight - emailButton.contentHeight - ( buttonHeight / 2 )
 infoScreen:insert( emailButton )
 
 gamelist.FindFiles = function()
@@ -497,7 +549,7 @@ This screen lists the current games that you have saved. Here, you can choose to
 
 To add a new game use the "New Game" button. Games are named automatically and sequentially and cannot be renamed at this time.
 
-To edit a game that you have saved touch the row on which the game is listed. This will take you to the Game Information screen.'
+To edit a game that you have saved touch the row on which the game is listed. This will take you to the Game Information screen.
 ]]
 
 
@@ -508,13 +560,7 @@ From this screen you can choose to edit the Move List of the game by selecting t
 
 You can send a copy of the PGN file for this game using the "Email" button. You need an email account and a default email app to do this. Your phone also needs to have an active internet connection (wireless or cellular).
 
-On this screen you can also edit information about the game. To edit any of the unlocked information select the current value of that field and type in the new information. The following information is stored for each game in addition to moves that were made in the game:
-
-Game:  
-Name of the game file stored on your phone. This information locked and cannot be changed.
-
-Source:  
-Specifies the program that generated the chess game. This information is locked and cannot be changed and is set to "ChessNotes"
+On this screen you can also edit information about the game. To edit any of the information select the current value of that field and type in the new information. The following information is stored for each game in addition to moves that were made in the game:
 
 Event: 
 Name of the tournament where this game was played. This information is optional. For Example: Utah Elementary Scholastic Championship
@@ -542,6 +588,8 @@ Rating of the player playing White pieces. This is a number between 100 - 2900. 
 
 BlackElo:  
 Rating of the player playing Black pieces. This is a number between 100 - 2900. For Example: 1400
+
+To return to the Game List screen use the "Back" button.
 ]]
 
 gamelist.GetHelpInfo = function()
