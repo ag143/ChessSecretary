@@ -222,6 +222,7 @@ editor.EditGame = function()
 	maxMoveNum = 0
 	moveColor = 1 -- 1 == w, 2 == b
 	currMove = ''
+	transition.to( editScreen, { alpha=1, time = 400, transition = easing.outExpo } )
 	moveListDisplay:deleteAllRows()
 	while moveNum <= #moveList do
 		currMove = moveList[moveNum][moveColor]
@@ -305,6 +306,7 @@ local function Done( event )
 		editor.filename = ''
 		editor.editDone = true
 		moveListDisplay:deleteAllRows()
+		transition.to( editScreen, { alpha=0, time = 400, transition = easing.outQuad } )
 	end
 end
 

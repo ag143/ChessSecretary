@@ -1,10 +1,10 @@
 + Make Date Fields be Date Fields in GameInfo screen
-+ Make Results field be a drop down
++ Clean up Radio button transitions
 + Enforce numeric range on ELO
-+ Get email for sending email
 + Save Settings and use them in app
-+ Make buttons in game list use shape (rounded rect)
++ Make buttons in game list use shape (rounded rect etc)
 + Add a 'Feedback' button to send email to BWG
++ Write help text for Game Edit Screen
 
 
 - (1.01) Save when backing out of the Game Info Screen
@@ -13,5 +13,6 @@
 - (1.02) Move game list and game info screens down so the banner ads don't overlap
 - (1.02) Add Help Button on each screen
 - (1.03) Add help screens for each phase
-- (1.04 ) Working save/load for Game Info
-- (1.05 ) Scroll Game Info fields off/on screen when editing
+- (1.04) Working save/load for Game Info
+- (1.05) Scroll Game Info fields off/on screen when editing
+- (1.06) Make Results field be a set of radio buttons

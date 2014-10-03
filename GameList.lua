@@ -13,6 +13,18 @@ local lastFileIndex=1
 local mode = "gamelist"
 local out = false
 
+-- Image sheet options and declaration
+local options = {
+    width = 50,
+    height = 50,
+    numFrames = 2,
+    sheetContentWidth = 100,
+    sheetContentHeight = 50
+}
+local whiteWinSheet = graphics.newImageSheet( "WhiteWin.png", options )
+local blackWinSheet = graphics.newImageSheet( "BlackWin.png", options )
+local drawSheet = graphics.newImageSheet( "Draw.png", options )
+
 -- 
 -- Abstract: List View sample app
 --  
@@ -76,41 +88,31 @@ shadow.x, shadow.y = 0, titleBar.y + titleBar.contentHeight * 0.5
 shadow.xScale = display.contentWidth / shadow.contentWidth
 shadow.alpha = 0.45
 
+gamelist.screens:insert( titleBar )
+gamelist.screens:insert( titleText )
+gamelist.screens:insert( shadow )
+
+
 local itemSelected = ''
 
 -- Forward reference for our edit button & tableview
 local list, editButton, backButton
 
-gamelist.RemoveInfo = function()
-	for hiderow=1,#infoButtons do
-		if infoButtons[hiderow].heading ~= 'Game' then
-			if( infoButtons[hiderow].infodisplay:getLabel() == 'Not Specified' ) then
-				gameInfo[infoButtons[hiderow].heading] = ''
-			else
-				gameInfo[infoButtons[hiderow].heading] = infoButtons[hiderow].infodisplay:getLabel()
-			end
-		end
-		transition.to( labelInfo[hiderow], { alpha = 0, time = 400, transition = easing.outQuad } )
-		transition.to( infoButtons[hiderow].infodisplay, { alpha = 0, time = 400, transition = easing.outQuad } )
-		if( infoButtons[hiderow].infoinput ) then
-			infoButtons[hiderow].infoinput:removeSelf()
-			infoButtons[hiderow].infoinput = nil
-		end
-	end
-	mode = "gamelist"
-end
-
 gamelist.TransitionToList = function()
-	--The table x origin refers to the center of the table in Graphics 2.0, so we translate with half the object's contentWidth
-	transition.to( list, { x = list.contentWidth * 0.5, time = 400, transition = easing.outExpo } )
-	transition.to( newGameButton, {alpha = 1, time = 400, transition = easing.outExpo } )
-	--transition.to( itemSelected, { x = display.contentWidth + itemSelected.contentWidth * 0.5, time = 400, transition = easing.outExpo } )
-	transition.to( editButton, { alpha = 0, time = 400, transition = easing.outQuad } )
-	transition.to( emailButton, { alpha = 0, time = 400, transition = easing.outQuad } )
-	transition.to( backButton, { alpha = 0, time = 400, transition = easing.outQuad } )
+
+	transition.to( infoScreen, { alpha=0, time = 400, transition = easing.outQuad } )
+	transition.to( listScreen, { alpha=1, time = 400, transition = easing.outExpo } )
+
+--~ 	--The table x origin refers to the center of the table in Graphics 2.0, so we translate with half the object's contentWidth
+--~ 	transition.to( list, { x = list.contentWidth * 0.5, time = 400, transition = easing.outExpo } )
+--~ 	transition.to( newGameButton, {alpha = 1, time = 400, transition = easing.outExpo } )
+--~ 	--transition.to( itemSelected, { x = display.contentWidth + itemSelected.contentWidth * 0.5, time = 400, transition = easing.outExpo } )
+--~ 	transition.to( editButton, { alpha = 0, time = 400, transition = easing.outQuad } )
+--~ 	transition.to( emailButton, { alpha = 0, time = 400, transition = easing.outQuad } )
+--~ 	transition.to( backButton, { alpha = 0, time = 400, transition = easing.outQuad } )
 	for hiderow=1,#infoButtons do
-		transition.to( infoButtons[hiderow].infodisplay, { alpha = 0, time = 400, transition = easing.outQuad } )
-		transition.to( labelInfo[hiderow], { alpha = 0, time = 400, transition = easing.outQuad } )
+--~ 		transition.to( infoButtons[hiderow].infodisplay, { alpha = 0, time = 400, transition = easing.outQuad } )
+--~ 		transition.to( labelInfo[hiderow], { alpha = 0, time = 400, transition = easing.outQuad } )
 		if( infoButtons[hiderow].infoinput ) then
 			infoButtons[hiderow].infoinput:removeSelf()
 			infoButtons[hiderow].infoinput = nil
@@ -121,19 +123,22 @@ end
 
 gamelist.TransitionToItem = function()
 	--Transition out the list, transition in the item selected text and the edit button
-
-	-- The table x origin refers to the center of the table in Graphics 2.0, so we translate with half the object's contentWidth
-	transition.to( list, { x = - list.contentWidth * 0.5, time = 400, transition = easing.outExpo } )
-	transition.to( newGameButton, { alpha = 0, time = 400, transition = easing.outExpo } )
-	--transition.to( itemSelected, { x = display.contentCenterX, time = 400, transition = easing.outExpo } )
-	transition.to( editButton, { alpha = 1, time = 400, transition = easing.outQuad } )
-	transition.to( emailButton, { alpha = 1, time = 400, transition = easing.outQuad } )
-	transition.to( backButton, { alpha = 1, time = 400, transition = easing.outQuad } )
 	gamelist.LoadInfo()
-	for hiderow=1,#infoButtons do
-		transition.to( infoButtons[hiderow].infodisplay, { alpha = 1, time = 400, transition = easing.outQuad } )
-		transition.to( labelInfo[hiderow], { alpha = 1, time = 400, transition = easing.outQuad } )
-	end
+	transition.to( infoScreen, { alpha=1, time = 400, transition = easing.outExpo } )
+	transition.to( listScreen, { alpha=0, time = 400, transition = easing.outQuad } )
+
+--~ 	-- The table x origin refers to the center of the table in Graphics 2.0, so we translate with half the object's contentWidth
+--~ 	transition.to( list, { x = - list.contentWidth * 0.5, time = 400, transition = easing.outExpo } )
+--~ 	transition.to( newGameButton, { alpha = 0, time = 400, transition = easing.outExpo } )
+--~ 	--transition.to( itemSelected, { x = display.contentCenterX, time = 400, transition = easing.outExpo } )
+--~ 	transition.to( editButton, { alpha = 1, time = 400, transition = easing.outQuad } )
+--~ 	transition.to( emailButton, { alpha = 1, time = 400, transition = easing.outQuad } )
+--~ 	transition.to( backButton, { alpha = 1, time = 400, transition = easing.outQuad } )
+--~ 	gamelist.LoadInfo()
+--~ 	for hiderow=1,#infoButtons do
+--~ 		transition.to( infoButtons[hiderow].infodisplay, { alpha = 1, time = 400, transition = easing.outQuad } )
+--~ 		transition.to( labelInfo[hiderow], { alpha = 1, time = 400, transition = easing.outQuad } )
+--~ 	end
 	mode = "gameinfo"
 end
 
@@ -146,7 +151,7 @@ function NewInfoButton( iX, index, iWidth, iHeight, infoText, headingText )
 	infoButton.infodisplay = nil
 	infoButton.heading = headingText
 	infoButton.index = index
-	
+	infoButton.inforesult = nil
 	
 	local transitionOut = function()
 		for hiderow=1,#infoButtons do
@@ -204,9 +209,14 @@ function NewInfoButton( iX, index, iWidth, iHeight, infoText, headingText )
 		end
 	end
 	
+	infoButton.InfoResult = function( event )
+		infoButton.infodisplay:setLabel( event.target.id )
+		transitionIn()
+	end
+	
 	local onInfoButtonRelease = function()
 	
-		if isSimulator then
+		if isSimulator and infoButton.heading ~= 'Result' then
 			if out then
 				transitionIn()
 			else
@@ -214,23 +224,58 @@ function NewInfoButton( iX, index, iWidth, iHeight, infoText, headingText )
 			end	
 			infoButton.infodisplay:setLabel( 'Changed' )
 		else
-			local inputFontSize = 14
-			if ( isAndroid ) then
-				inputFontSize = inputFontSize - 4
-			end
+			if infoButton.heading == 'Result' and infoButton.inforesult == nil then
+				-- Create a group for the radio button set
+				infoButton.inforesult = display.newGroup()
 
-			infoButton.infoinput = native.newTextField( infoButton.infodisplay.x, infoButton.infodisplay.y, infoButton.infodisplay.width, infoButton.infodisplay.height )
-			infoButton.infoinput.anchorX = 0
-			infoButton.infoinput.anchorY = 0
-			infoButton.infoinput.font = native.newFont( native.systemFontBold, inputFontSize )		
-			if infoButton.infodisplay:getLabel() ~= 'Not Specified' then
-				infoButton.infoinput.text = infoButton.infodisplay:getLabel()
+				-- Create two associated radio buttons (inserted into the same display group)
+				local options = 
+				{
+					left = (2*display.contentWidth/3)-50,
+					top = 100,
+					style = "radio",
+					id = '1-0',
+					initialSwitchState = true,
+					onRelease = infoButton.InfoResult,
+					sheet = whiteWinSheet,
+					frameOff = 2,
+					frameOn = 1,
+				}
+				wwButton = widget.newSwitch( options )
+				infoButton.inforesult:insert( wwButton )
+				options.sheet = blackWinSheet
+				options.left = 2*display.contentWidth/3
+				options.id = '0-1'
+				options.initialSwitchState = false
+				bwButton = widget.newSwitch( options )
+				infoButton.inforesult:insert( bwButton )
+				options.sheet = drawSheet
+				options.left = 50+2*display.contentWidth/3
+				options.id = '1/2-1/2'
+				options.initialSwitchState = false
+				drButton = widget.newSwitch( options )
+				infoButton.inforesult:insert( drButton )
+				infoScreen:insert( infoButton.inforesult )
+				transitionOut()
+			else
+				local inputFontSize = 14
+				if ( isAndroid ) then
+					inputFontSize = inputFontSize - 4
+				end
+
+				infoButton.infoinput = native.newTextField( infoButton.infodisplay.x, infoButton.infodisplay.y, infoButton.infodisplay.width, infoButton.infodisplay.height )
+				infoButton.infoinput.anchorX = 0
+				infoButton.infoinput.anchorY = 0
+				infoButton.infoinput.font = native.newFont( native.systemFontBold, inputFontSize )		
+				if infoButton.infodisplay:getLabel() ~= 'Not Specified' then
+					infoButton.infoinput.text = infoButton.infodisplay:getLabel()
+				end
+				infoButton.infoinput.inputType = gameInfoType[headingText]
+				transitionOut()
+				native.setKeyboardFocus( infoButton.infoinput )
+				--local handlerName = headingtext .. 'Handler'
+				infoButton.infoinput:addEventListener( "userInput", infoButton.InfoEntry )
 			end
-			infoButton.infoinput.inputType = gameInfoType[headingText]
-			transitionOut()
-			native.setKeyboardFocus( infoButton.infoinput )
-			--local handlerName = headingtext .. 'Handler'
-			infoButton.infoinput:addEventListener( "userInput", infoButton.InfoEntry )
 		end
 	end
 	
@@ -364,10 +409,6 @@ background.y = display.contentHeight - bkgndH + appOriginY
 --Insert widgets/images into a group
 listScreen:insert( list )
 
-listScreen:insert( titleBar )
-listScreen:insert( titleText )
-listScreen:insert( shadow )
-
 --Handle the edit button release event
 local function onNewRelease()
 		-- Update the item selected text
@@ -377,10 +418,7 @@ local function onNewRelease()
 		gamelist.TransitionToItem()
 end
 
---Handle the edit button release event
-local function onEditRelease()
-	--Transition in the list, transition out the item selected text and the edit button
-	--print( 'INFO DISPLAY' )
+local function GrabAndHideInput()
 	for hiderow=1,#infoButtons do
 		if infoButtons[hiderow].heading ~= 'Game' then
 			--print( infoButtons[hiderow].heading, infoButtons[hiderow].infodisplay:getLabel() )
@@ -390,33 +428,29 @@ local function onEditRelease()
 				gameInfo[infoButtons[hiderow].heading] = infoButtons[hiderow].infodisplay:getLabel()
 			end
 		end
+		if( infoButtons[hiderow].infoinput ) then
+			infoButtons[hiderow].infoinput:removeSelf()
+			infoButtons[hiderow].infoinput = nil
+		end
 	end
+end
+
+--Handle the edit button release event
+local function onEditRelease()
+	GrabAndHideInput()
 	if newFile == true then
 		gamelist.files[#gamelist.files + 1] = gamelist.selectedFile
 		list:insertRow({ rowHeight = 40,  rowColor = { default={ 1, 1, 1, 0 }, over={ 1, 1, 1, 0.2 } }})
 		newFile = false
 	end
 	gamelist.selectedFile = itemSelected
+	gamelist.TransitionToList()
 end
 
 --Handle the edit button release event
 local function onBackRelease()
 	--Transition in the list, transition out the item selected text and the edit button
-	--print( 'INFO DISPLAY' )
-	for hiderow=1,#infoButtons do
-		if infoButtons[hiderow].heading ~= 'Game' then
-			--print( infoButtons[hiderow].heading, infoButtons[hiderow].infodisplay:getLabel() )
-			if infoButtons[hiderow].infodisplay:getLabel() == 'Not Specified' then
-				gameInfo[infoButtons[hiderow].heading] = ''
-			else
-				gameInfo[infoButtons[hiderow].heading] = infoButtons[hiderow].infodisplay:getLabel()
-			end
-		end
-	end
---~ 	print( 'GAME INFO' )
---~ 	for heading, info in pairs(gameInfo) do
---~ 		print( heading, info )
---~ 	end	
+	GrabAndHideInput()
 	SaveGame( itemSelected )
 	itemSelected = '' 
 	gamelist.FindFiles()
@@ -448,7 +482,7 @@ editButton = widget.newButton
 	labelYOffset = - 1,
 	onRelease = onEditRelease
 }
-editButton.alpha = 0
+editButton.alpha = 1
 editButton.x = display.contentWidth * 0.668
 editButton.y = display.contentHeight - editButton.contentHeight - ( buttonHeight / 2 )
 editButton.anchorX = 0
@@ -462,7 +496,7 @@ backButton = widget.newButton
 	labelYOffset = - 1,
 	onRelease = onBackRelease
 }
-backButton.alpha = 0
+backButton.alpha = 1
 backButton.x = 1
 backButton.anchorX = 0
 backButton.y = display.contentHeight - backButton.contentHeight - ( buttonHeight / 2 )
@@ -504,7 +538,7 @@ emailButton = widget.newButton
 	labelYOffset = - 1,
 	onRelease = onEmailRelease
 }
-emailButton.alpha = 0
+emailButton.alpha = 1
 emailButton.anchorX = 0
 emailButton.x = display.contentWidth * 0.334
 emailButton.y = display.contentHeight - emailButton.contentHeight - ( buttonHeight / 2 )
@@ -588,5 +622,6 @@ gamelist.GetHelpInfo = function()
 end
 
 gamelist.FindFiles()
+gamelist.TransitionToList()
 
 return gamelist

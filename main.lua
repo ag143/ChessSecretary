@@ -1,5 +1,5 @@
 --Global Variables
-version = 1.05
+version = 1.06
 moveCheckVersion = 2.0
 isSimulator = "simulator" == system.getInfo("environment")
 isAndroid = "Android" == system.getInfo( "platformName" )
@@ -30,7 +30,7 @@ gameInfoType =
 	Round = 'number',
 	White = 'default',
 	Black = 'default',
-	Result = 'default',
+	Result = 'radio',
 	WhiteElo = 'number',
 	BlackElo = 'number',
 }
@@ -147,7 +147,6 @@ local function appState(event)
 		end
 	elseif state == 'selectgame' then
 		if gameList.selectedFile ~= '' then
-			gameList.RemoveInfo()
 			gameList.screens.isVisible = false
 			state = 'editgame'
 			editor.editDone = false
