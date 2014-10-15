@@ -152,16 +152,24 @@ function NewInfoButton( iX, index, iWidth, iHeight, infoText, headingText )
 	infoButton.heading = headingText
 	infoButton.index = index
 	infoButton.inforesult = nil
+	infoButton.infoRadios = nil
 	
 	local transitionOut = function()
 		for hiderow=1,#infoButtons do
 			if hiderow == infoButton.index then
 				transition.to( labelInfo[hiderow], { y=topUsableY + (display.contentHeight/20), time = 400, transition = easing.outQuad } )
-				if isSimulator then
+				if isSimulator and infoButton.heading ~= 'Result' then
 					transition.to( infoButtons[hiderow].infodisplay, { y=topUsableY + (display.contentHeight/20), alpha = 0.2, time = 400, transition = easing.outQuad } )
 				else
 					transition.to( infoButtons[hiderow].infodisplay, { y=topUsableY + (display.contentHeight/20), alpha = 0, time = 400, transition = easing.outQuad } )
-					transition.to( infoButtons[hiderow].infoinput, { y=topUsableY + (display.contentHeight/20), time = 400, transition = easing.outQuad } )
+					if infoButton.heading == 'Result' then
+						transition.to( infoButtons[hiderow].inforesult, { time = 400, alpha = 1, transition = easing.outQuad } )
+						for rbs=1, #infoButton.infoRadios do
+							transition.to( infoButton.infoRadios[rbs], { y=topUsableY + (display.contentHeight/20), time = 400, transition = easing.outQuad } )
+						end
+					else
+						transition.to( infoButtons[hiderow].infoinput, { y=topUsableY + (display.contentHeight/20), time = 400, transition = easing.outQuad } )
+					end
 				end
 			else
 				transition.to( labelInfo[hiderow], { x=-labelInfo[hiderow].contentWidth*.5, alpha = 0, time = 400, transition = easing.outQuad } )
@@ -176,6 +184,12 @@ function NewInfoButton( iX, index, iWidth, iHeight, infoText, headingText )
 			if hiderow == infoButton.index then
 				transition.to( labelInfo[hiderow], { y=topUsableY + (hiderow*(display.contentHeight/20)), time = 400, transition = easing.outQuad } )
 				transition.to( infoButtons[hiderow].infodisplay, { y=topUsableY + (hiderow*(display.contentHeight/20)), alpha = 1, time = 400, transition = easing.outQuad } )
+				if infoButton.heading == 'Result' then
+					transition.to( infoButtons[hiderow].inforesult, { time = 400, alpha = 0, transition = easing.outQuad } )
+					for rbs=1, #infoButton.infoRadios do
+						transition.to( infoButton.infoRadios[rbs], { y=topUsableY + (hiderow * display.contentHeight/20), time = 400, transition = easing.outQuad } )
+					end
+				end
 			else
 				transition.to( labelInfo[hiderow], { x=10, alpha = 1, time = 400, transition = easing.outQuad } )
 				transition.to( infoButtons[hiderow].infodisplay, { x=display.contentWidth/3, alpha = 1, time = 400, transition = easing.outQuad } )
@@ -206,6 +220,12 @@ function NewInfoButton( iX, index, iWidth, iHeight, infoText, headingText )
 			infoButton.infoinput:removeSelf()
 			infoButton.infoinput = nil
 			transitionIn()
+		elseif infoButton.heading == 'Date' then
+			local len = string.len( infoButton.infoinput.text )
+			if  len == 4 or len == 7 then
+				infoButton.infoinput.text = infoButton.infoinput.text .. '.'
+			end
+			infoButton.infoinput.text = string.gsub( infoButton.infoinput.text, '%.%.', '%.' )
 		end
 	end
 	
@@ -224,38 +244,50 @@ function NewInfoButton( iX, index, iWidth, iHeight, infoText, headingText )
 			end	
 			infoButton.infodisplay:setLabel( 'Changed' )
 		else
-			if infoButton.heading == 'Result' and infoButton.inforesult == nil then
-				-- Create a group for the radio button set
-				infoButton.inforesult = display.newGroup()
+			if infoButton.heading == 'Result'  then
+				if infoButton.inforesult == nil then
+					-- Create a group for the radio button set
+					infoButton.inforesult = display.newGroup()
+					infoButton.infoRadios = {}
 
-				-- Create two associated radio buttons (inserted into the same display group)
-				local options = 
-				{
-					left = (2*display.contentWidth/3)-50,
-					top = 100,
-					style = "radio",
-					id = '1-0',
-					initialSwitchState = true,
-					onRelease = infoButton.InfoResult,
-					sheet = whiteWinSheet,
-					frameOff = 2,
-					frameOn = 1,
-				}
-				wwButton = widget.newSwitch( options )
-				infoButton.inforesult:insert( wwButton )
-				options.sheet = blackWinSheet
-				options.left = 2*display.contentWidth/3
-				options.id = '0-1'
-				options.initialSwitchState = false
-				bwButton = widget.newSwitch( options )
-				infoButton.inforesult:insert( bwButton )
-				options.sheet = drawSheet
-				options.left = 50+2*display.contentWidth/3
-				options.id = '1/2-1/2'
-				options.initialSwitchState = false
-				drButton = widget.newSwitch( options )
-				infoButton.inforesult:insert( drButton )
-				infoScreen:insert( infoButton.inforesult )
+					-- Create two associated radio buttons (inserted into the same display group)
+					local options = 
+					{
+						left = (2*display.contentWidth/3)-50,
+						top = infoButton.infodisplay.y,
+						style = "radio",
+						id = '1-0',
+						initialSwitchState = true,
+						onRelease = infoButton.InfoResult,
+						sheet = whiteWinSheet,
+						frameOff = 2,
+						frameOn = 1,
+					}
+					local wwButton = widget.newSwitch( options )
+					infoButton.infoRadios[#infoButton.infoRadios+1] = wwButton
+					infoScreen:insert( infoButton.infoRadios[#infoButton.infoRadios] )
+					infoButton.inforesult:insert( infoButton.infoRadios[#infoButton.infoRadios] )
+					options.sheet = blackWinSheet
+					options.left = 2*display.contentWidth/3
+					options.id = '0-1'
+					options.initialSwitchState = false
+					local bwButton = widget.newSwitch( options )
+					infoButton.infoRadios[#infoButton.infoRadios+1] = bwButton
+					infoScreen:insert( infoButton.infoRadios[#infoButton.infoRadios] )
+					infoButton.inforesult:insert( infoButton.infoRadios[#infoButton.infoRadios] )
+					options.sheet = drawSheet
+					options.left = 50+2*display.contentWidth/3
+					options.id = '1/2-1/2'
+					options.initialSwitchState = false
+					local drButton = widget.newSwitch( options )
+					infoButton.infoRadios[#infoButton.infoRadios+1] = drButton
+					infoScreen:insert( infoButton.infoRadios[#infoButton.infoRadios] )
+					infoButton.inforesult:insert( infoButton.infoRadios[#infoButton.infoRadios] )
+					infoScreen:insert( infoButton.inforesult )
+				end
+				for rbs=1, #infoButton.infoRadios do
+					infoButton.infoRadios[rbs]:setState( { isOn=infoButton.infodisplay:getLabel() == infoButton.infoRadios[rbs].id } )
+				end
 				transitionOut()
 			else
 				local inputFontSize = 14
@@ -269,6 +301,8 @@ function NewInfoButton( iX, index, iWidth, iHeight, infoText, headingText )
 				infoButton.infoinput.font = native.newFont( native.systemFontBold, inputFontSize )		
 				if infoButton.infodisplay:getLabel() ~= 'Not Specified' then
 					infoButton.infoinput.text = infoButton.infodisplay:getLabel()
+				elseif infoButton.heading == 'Date' then
+					infoButton.infoinput.placeholder = 'YYYY.MM.DD'
 				end
 				infoButton.infoinput.inputType = gameInfoType[headingText]
 				transitionOut()
@@ -285,6 +319,8 @@ function NewInfoButton( iX, index, iWidth, iHeight, infoText, headingText )
 		y = topUsableY + (infoButton.index*(display.contentHeight/20)),
 		width = iWidth,
 		height = iHeight,
+		anchorX = 0,
+		anchorY = 0,
 		label = infoText, 
 		labelYOffset = - 1,
 		onRelease = onInfoButtonRelease
@@ -506,7 +542,7 @@ local function onEmailRelease( event )
 	-- compose an HTML email with two attachments
 	local options =
 	{
-	   to = { "sandeep.kharkar@gmail.com" },
+	   --to = { "sandeep.kharkar@gmail.com" },
 	   --cc = { "john.smith@somewhere.com", "jane.smith@somewhere.com" },
 	   subject = gamelist.selectedFile,
 	   isBodyHtml = false,
@@ -518,13 +554,11 @@ local function onEmailRelease( event )
 --		  { baseDir=system.ResourceDirectory, filename="coronalogo.png", type="image" },
 --	   },
 	}
-	local result = native.showPopup("mail", options)
-	
+	local result = native.showPopup( "mail", options )
+	print( options.body )
 	if not result then
 		print( "Mail Not supported/setup on this device" )
-		native.showAlert( "Alert!",
-		"Mail not supported/setup on this device.", { "OK" }
-	);
+		native.showAlert( "Alert!",	"Mail not supported/setup on this device.", { "OK" })
 	end
 	-- NOTE: options table (and all child properties) are optional
 end

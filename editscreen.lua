@@ -31,6 +31,7 @@ local piecebuttons = {}
 local kingbuttons = {}
 local movebuttons = {}
 local doneButton
+local bkspButton
 editor.editDone = false
 
 local moveDisplay
@@ -38,12 +39,12 @@ local moveListDisplay
 local LEFT_PADDING = 10
 local ROW_HEIGHT = 20
 local MLDisplayHeight = display.actualContentHeight/2.75
-local MLD_Top = display.actualContentHeight/2.1 - MLDisplayHeight
+local MLD_Top = appOriginY + 1.5 * butnHt
 
 --print( MLD_Top + MLDisplayHeight )
 --print( display.contentHeight - (butnHt*7) )
-if MLD_Top + MLDisplayHeight > display.contentHeight - (butnHt*7) then
-	MLDisplayHeight = display.contentHeight - (butnHt*7) - MLD_Top
+if MLD_Top + MLDisplayHeight > display.contentHeight - (butnHt*6) then
+	MLDisplayHeight = display.contentHeight - (butnHt*6) - MLD_Top
 	--print( MLD_Top + MLDisplayHeight )
 end
 
@@ -266,6 +267,13 @@ function ChangeButtonColors()
 			kingbuttons[i]:setFillColor( 1,1,1 )
 		end
 	end
+	if moveColor == 1 then
+		moveDisplay:setFillColor( 0.1,0.1,0.1 )
+		moveDisplayBkgnd:setFillColor( 1, 1, 1 )
+	else
+		moveDisplay:setFillColor( 1, 1, 1 )
+		moveDisplayBkgnd:setFillColor( 0.1,0.1,0.1 )
+	end	
 end
 
 function EnableButtons( numbers, letters, pieces, kings )
@@ -289,8 +297,12 @@ local function handleButtonEvent( event )
 	if ( "ended" == event.phase ) then
 		--print( 'Button ' .. event.target:getLabel() .. ' was pressed and released' )
 		if event.target.alpha == 1 then
+			if currMove:len() < 8 then
 				currMove = currMove .. event.target:getLabel()
-				UpdateMoveDisplay( currMove )
+			else
+				moveDisplay:setFillColor( 1, 0, 0 )
+			end
+			UpdateMoveDisplay( currMove )
 		end
 	end    
 end
@@ -318,6 +330,13 @@ end
 
 local function BkspMove( event )
 	if ( "ended" == event.phase ) then
+		if currMove:len() == 8 then
+			if moveColor == 1 then
+				moveDisplay:setFillColor( 0.1,0.1,0.1 )
+			else
+				moveDisplay:setFillColor( 1, 1, 1 )
+			end	
+		end
 		currMove = string.sub( currMove, 1, string.len(currMove)-1)
 		UpdateMoveDisplay( currMove )
 	end
@@ -355,7 +374,7 @@ local function NextMove( event )
 	end
 end
  
-local move = { '','','<<','<','>','>>','','' }
+--local move = { '','','<<','<','>','>>','','' }
 local letters = { 'a','b','c','d','e','f','g','h' }
 local pieces = { '','R','Q','x','+','B','N','' }
 
@@ -387,8 +406,37 @@ editScreenBkgnd.anchorX = 0
 editScreenBkgnd.anchorY = 0
 editScreen:insert( editScreenBkgnd )
 
-moveDisplay = display.newText( '', 0, 0, "Arial", 14 )
+moveDisplayBkgnd = display.newRect( display.contentWidth / 3.0, baseY - butnHt*5, display.contentWidth / 3.0, butnHt/1.1, 18 )
+moveDisplayBkgnd:setFillColor( 0.75, 0.75, 0.75 )
+moveDisplayBkgnd.anchorX = 0
+moveDisplayBkgnd.anchorY = 0
+editScreen:insert( moveDisplayBkgnd )
+
+local moveDisplayOptions = 
+{
+    --parent = textGroup,
+    text = "",     
+    x = display.contentWidth / 3.0,
+    y = baseY - butnHt*5.5,
+    width = display.contentWidth / 3.0,
+	height = butnHt/2,
+    font = native.systemFontBold,   
+    fontSize = 18,
+    align = "center"  --new alignment parameter
+}
+moveDisplay = display.newText( moveDisplayOptions )
 editScreen:insert( moveDisplay )
+
+buttonInfo.label = '<='
+buttonInfo.left = 2*display.contentWidth / 3.0
+buttonInfo.top = baseY - butnHt*5
+buttonInfo.height = butnHt/1.1
+buttonInfo.onEvent = BkspMove
+bkspButton = widget.newButton(buttonInfo)	
+editScreen:insert( bkspButton )
+
+buttonInfo.onEvent = handleButtonEvent
+buttonInfo.height = butnHt
 
 -- Create a background to go behind our tableView
 local background = display.newImage( editScreen, "bg.png", display.contentCenterX - display.actualContentWidth/4, MLD_Top, true )
@@ -435,18 +483,6 @@ end
 	movebuttons[#movebuttons+1] = widget.newButton(buttonInfo)	
 	editScreen:insert( movebuttons[#movebuttons] )
 
-	buttonInfo.left = 3 * butnWt
-	buttonInfo.label = '<'
-	buttonInfo.onEvent = BkspMove
-	movebuttons[#movebuttons+1] = widget.newButton(buttonInfo)	
-	editScreen:insert( movebuttons[#movebuttons] )
-
-	buttonInfo.left = 4 * butnWt
-	buttonInfo.label = '>'
-	buttonInfo.onEvent = EnterMove
-	movebuttons[#movebuttons+1] = widget.newButton(buttonInfo)	
-	editScreen:insert( movebuttons[#movebuttons] )
-
 	buttonInfo.left = 5 * butnWt
 	buttonInfo.label = '>>'
 	buttonInfo.onEvent = NextMove
@@ -456,8 +492,16 @@ end
 --KingButtons
 	buttonInfo.defaultFile = "rtbuttond.png"
 	buttonInfo.overFile = "rtbuttono.png"	
-	buttonInfo.top = baseY - butnHt*4
 	buttonInfo.width = butnWt*2
+	
+	buttonInfo.left = 3 * butnWt
+	buttonInfo.label = 'Enter'
+	buttonInfo.onEvent = EnterMove
+	movebuttons[#movebuttons+1] = widget.newButton(buttonInfo)	
+	editScreen:insert( movebuttons[#movebuttons] )
+
+	buttonInfo.top = baseY - butnHt*4
+	
 	buttonInfo.onEvent = handleButtonEvent
 	
 	buttonInfo.label = '0-0'
@@ -476,8 +520,8 @@ end
 	editScreen:insert( kingbuttons[#kingbuttons] )
 	
 --Done Button
-	buttonInfo.top = baseY - butnHt*5
-	buttonInfo.label = 'Done'
+	buttonInfo.top = appOriginY
+	buttonInfo.label = 'Save'
 	buttonInfo.left = butnWt * 3
 	buttonInfo.onEvent = Done
 	doneButton = widget.newButton(buttonInfo)	
@@ -486,16 +530,58 @@ end
 
 function UpdateMoveDisplay()
 	moveDisplay.text = currMove
-	moveDisplay.x = display.contentWidth / 2.0
-	moveDisplay.y = baseY - butnHt*6
-	moveDisplay.anchorY = 0
+	moveDisplay.x = display.contentWidth / 3.0
+	moveDisplay.y = baseY - butnHt*4.5
+	moveDisplay.align = 'center'
+	moveDisplay.anchorX = 0
+	--moveDisplay.anchorY = 0
 --	if version >= moveCheckVersion then
 --		EnableButtons( moveCheck.GetValidButtonList( currMove, moveColor ) )
 --	end
 end
 
+local gameedithelptext = [[
+This screen shows you the list of moves that were made in the game. It also displays the move that is currently being added or edited.
+
+The screen has a keyboard that you can use to enter or edit the moves made in the game.
+The keyboard has the following keys:
+
+K; King
+
+R: Rook
+
+Q: Queen
+
+B: Bishop
+
+N: Knight
+
+0-0: King side castling
+
+0-0-0: Queen side castling
+
+x: Capture
+
++: Check, also Checkmate (++)
+
+a-h: used to specify pawns
+a-h and 1-8 are used to indicate a start or ending square of a move.
+
+<<: Go to previous move
+
+>>: Go to next move
+
+Enter: Enter the move into the move list
+
+<=: Backspace, clear the last entered key in the move currently being edited
+
+Save: Save the current state of the game and go back to the list of games
+
+The keyboard and current move display change color to indicate which side would move next.
+]]
+
 editor.GetHelpInfo = function()
-	return "Game Edit Help" , "Blah Blah Blah yada yada yada" 
+	return "Game Edit Help" , gameedithelptext
 end
 
 return editor
