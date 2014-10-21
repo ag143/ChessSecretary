@@ -1,12 +1,7 @@
 + Make Date Fields be Date Fields in GameInfo screen
 + Enforce numeric range on ELO
 + Save Settings and use them in app
-+ Make buttons in game list use shape (rounded rect etc)
-+ Make buttons in help screen use shape (rounded rect etc)
 + Add a 'Feedback' button to send email to BWG
-+ Update to new version of Corona
-+ Make it more obvious that the Game and Source fields cannot be edited
-+ Add a "Back" button to the help screen
 
 
 - (1.01) Save when backing out of the Game Info Screen
@@ -21,3 +16,11 @@
 - (1.07) Write help text for Game Edit Screen
 - (1.07) Update the layout of the Edit Screen
 - (1.07) Fixup radio button transitions to be correct
+- (1.10) Make buttons in game list use shape (rounded rect etc)
+- (1.10) Make buttons in help screen use shape (rounded rect etc)
+- (1.10) Update to new version of Corona
+- (1.10) Make it more obvious that the Game and Source fields cannot be edited
+- (1.10) Add a "Back" button to the help screen
+- (1.10) Added support for Android "Back" button
+- (1.11) Help buttons have a rotating transition
+- (1.11) New Keyboard layout

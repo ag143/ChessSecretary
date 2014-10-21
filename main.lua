@@ -1,10 +1,19 @@
 --Global Variables
-version = 1.07
+version = 1.11
 moveCheckVersion = 2.0
 isSimulator = "simulator" == system.getInfo("environment")
 isAndroid = "Android" == system.getInfo( "platformName" )
 bannerEnd = 53
 appOriginY = display.screenOriginY + bannerEnd
+titleBarHeight = 32
+transitionTime = 500
+
+wbGradient = {
+	type = 'gradient',
+	color1 = { 1, 1, 1, .5 }, 
+	color2 = { .1, .1, .1, .5 },
+	direction = "up"
+}
 
 
 moveList = {}
@@ -115,8 +124,15 @@ local ads = require "ads"
 -- initialize ad network:
 ads.init( adNetwork, appID )
 
-local editor = require( 'editscreen' )
-editor.screens.isVisible = false
+-- Create a background to go behind our tableView
+local bkgndH = 500
+local background = display.newImageRect( "background.png", 320, bkgndH )
+background.anchorX = 0
+background.anchorY = 0
+background.y = display.contentHeight - bkgndH + appOriginY
+--gamelist.screens:insert( background )
+
+local editor = require( 'editscreen2' )
 
 local gameList = require( 'gamelist' )
 gameList.screens.isVisible = true
@@ -130,13 +146,17 @@ local lastState = state
 local function appState(event)
 	if help.AskedForHelp()  then 
 		lastState = state
-		state = "help" 
+		state = 'help' 
 		local title
 		local helpText
 		if lastState == 'selectgame' then
 			title, helpText = gameList.GetHelpInfo()
+			transition.to( gameList.screens, { x = -display.contentWidth * 1.5, alpha=0, time = transitionTime, transition = easing.outQuad } )
+			--gameList.screens.isVisible = false
 		elseif lastState == 'editgame' then
 			title, helpText = editor.GetHelpInfo()
+			transition.to( editor.screens, { x = -display.contentWidth * 1.5, alpha=0, time = transitionTime, transition = easing.outQuad } )
+			--editor.screens.isVisible = false
 		end
 		help.ShowHelp( appOriginY, title, helpText )
 	end
@@ -144,10 +164,19 @@ local function appState(event)
 		if help.doneWithHelp then
 			state = lastState
 			lastState = 'help'
+			if state == 'selectgame' then
+				transition.to( gameList.screens, { x = 0, alpha=1, time = transitionTime, transition = easing.outQuad } )
+				--gameList.screens.isVisible = true
+			elseif state == 'editgame' then
+				transition.to( editor.screens, { x = 0, alpha=1, time = transitionTime, transition = easing.outQuad } )
+				--editor.screens.isVisible = true
+			end
 		end
 	elseif state == 'selectgame' then
 		if gameList.selectedFile ~= '' then
-			gameList.screens.isVisible = false
+			--gameList.screens.isVisible = false
+			transition.to( gameList.screens, { x = -display.contentWidth * 1.5, alpha=0, time = transitionTime, transition = easing.outQuad } )
+			transition.to( editor.screens, { x = 0, alpha=1, time = transitionTime, transition = easing.outQuad } )
 			state = 'editgame'
 			editor.editDone = false
 			editor.filename = gameList.selectedFile
@@ -158,7 +187,9 @@ local function appState(event)
 		end
 	elseif state == 'editgame' then
 		if editor.editDone == true then
-			editor.screens.isVisible = false
+			transition.to( editor.screens, { x = display.contentWidth * 1.5, alpha=0, time = transitionTime, transition = easing.outQuad } )
+			transition.to( gameList.screens, { x = 0, alpha=1, time = transitionTime, transition = easing.outQuad } )
+			--editor.screens.isVisible = false
 			state = 'selectgame'
 			gameList.selectedFile = ''
 			gameList.FindFiles()
@@ -175,5 +206,24 @@ end
 if not isSimulator then
 	ads.show( "banner", { x=0, y=0, interval=30, testMode=true } )	-- standard interval for "inneractive" is 60 seconds
 end
+
+local function onKeyEvent( event )
+	local phase = event.phase
+	local keyName = event.keyName
+	--print( event.phase, event.keyName )
+
+	if ( "back" == keyName and phase == "up" ) then
+		if state == 'help' then
+			return helpWidget.handleAndroidBackButton()
+		elseif state == 'selectgame' then
+			return gameList.handleAndroidBackButton()
+		elseif state == 'editgame' then
+			return editor.handleAndroidBackButton()
+		end
+	end
+end
+
+--add the key callback
+Runtime:addEventListener( "key", onKeyEvent )
 Runtime:addEventListener( "enterFrame", appState );
 

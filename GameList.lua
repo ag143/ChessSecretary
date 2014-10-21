@@ -56,14 +56,6 @@ display.setDefault( "background", 255/255 )
 
 gamelist.screens = display.newGroup()
 
---Create a group to hold widgets & images for the game list
-listScreen = display.newGroup()
-gamelist.screens:insert( listScreen )
-
---Create a group to hold widgets & images for the game info
-infoScreen = display.newGroup()
-gamelist.screens:insert( infoScreen )
-
 local titleGradient = {
 	type = 'gradient',
 	color1 = { 189/255, 203/255, 220/255, 255/255 }, 
@@ -72,26 +64,42 @@ local titleGradient = {
 }
 
 -- Create toolbar to go at the top of the screen
-local titleBar = display.newRect( halfW, 0, display.contentWidth, 32 )
+local titleBar = display.newRect( 0, 0, display.contentWidth-40, titleBarHeight )
 titleBar:setFillColor( titleGradient )
-titleBar.y = appOriginY + titleBar.contentHeight * 0.5
-local topUsableY = appOriginY + titleBar.contentHeight
+titleBar.anchorX = 0
+titleBar.y = appOriginY + titleBarHeight * 0.5
+local topUsableY = appOriginY + titleBarHeight
 
 -- create embossed text to go on toolbar
-local titleText = display.newEmbossedText( "My Games", halfW, titleBar.y, native.systemFontBold, 20 )
+local titleText = display.newEmbossedText( "My Games", (display.contentWidth-40)/2, titleBar.y, native.systemFontBold, 20 )
 
 -- create a shadow underneath the titlebar (for a nice touch)
 local shadow = display.newImage( "shadow.png" )
 shadow.anchorX = 0.0	-- TopLeft anchor points
 shadow.anchorY = 0.0
-shadow.x, shadow.y = 0, titleBar.y + titleBar.contentHeight * 0.5
-shadow.xScale = display.contentWidth / shadow.contentWidth
+shadow.x, shadow.y = 0, titleBar.y + titleBarHeight * 0.5
+shadow.xScale = ( display.contentWidth - 40 ) / shadow.contentWidth
 shadow.alpha = 0.45
 
 gamelist.screens:insert( titleBar )
 gamelist.screens:insert( titleText )
 gamelist.screens:insert( shadow )
 
+--~ -- Create a background to go behind our tableView
+--~ local bkgndH = 500
+--~ local background = display.newImageRect( "background.png", 320, bkgndH )
+--~ background.anchorX = 0
+--~ background.anchorY = 0
+--~ background.y = display.contentHeight - bkgndH + appOriginY
+--~ gamelist.screens:insert( background )
+
+--Create a group to hold widgets & images for the game list
+listScreen = display.newGroup()
+gamelist.screens:insert( listScreen )
+
+--Create a group to hold widgets & images for the game info
+infoScreen = display.newGroup()
+gamelist.screens:insert( infoScreen )
 
 local itemSelected = ''
 
@@ -142,6 +150,50 @@ gamelist.TransitionToItem = function()
 	mode = "gameinfo"
 end
 
+local transitionOut = function( currentIndex )
+	for hiderow=1,#infoButtons do
+		if hiderow == currentIndex then
+			transition.to( labelInfo[hiderow], { y=topUsableY + (display.contentHeight/20), time = 400, transition = easing.outQuad } )
+			if isSimulator and infoButtons[hiderow].heading ~= 'Result' then
+				transition.to( infoButtons[hiderow].infodisplay, { y=topUsableY + (display.contentHeight/20), alpha = 0.2, time = 400, transition = easing.outQuad } )
+			else
+				transition.to( infoButtons[hiderow].infodisplay, { y=topUsableY + (display.contentHeight/20), alpha = 0, time = 400, transition = easing.outQuad } )
+				if infoButtons[hiderow].heading == 'Result' then
+					transition.to( infoButtons[hiderow].inforesult, { time = 400, alpha = 1, transition = easing.outQuad } )
+					for rbs=1, #infoButtons[hiderow].infoRadios do
+						transition.to( infoButtons[hiderow].infoRadios[rbs], { y=topUsableY + (display.contentHeight/20), time = 400, transition = easing.outQuad } )
+					end
+				else
+					transition.to( infoButtons[hiderow].infoinput, { y=topUsableY + (display.contentHeight/20), time = 400, transition = easing.outQuad } )
+				end
+			end
+		else
+			transition.to( labelInfo[hiderow], { x=-labelInfo[hiderow].contentWidth*.5, alpha = 0, time = 400, transition = easing.outQuad } )
+			transition.to( infoButtons[hiderow].infodisplay, { x=display.contentWidth, alpha = 0, time = 400, transition = easing.outQuad } )
+		end
+	end
+	out = true
+end
+
+local transitionIn = function( currentIndex )
+	for hiderow=1,#infoButtons do
+		if hiderow == currentIndex then
+			transition.to( labelInfo[hiderow], { y=topUsableY + (hiderow*(display.contentHeight/20)), time = 400, transition = easing.outQuad } )
+			transition.to( infoButtons[hiderow].infodisplay, { y=topUsableY + (hiderow*(display.contentHeight/20)), alpha = 1, time = 400, transition = easing.outQuad } )
+			if infoButtons[hiderow].heading == 'Result' then
+				transition.to( infoButtons[hiderow].inforesult, { time = 400, alpha = 0, transition = easing.outQuad } )
+				for rbs=1, #infoButtons[hiderow].infoRadios do
+					transition.to( infoButtons[hiderow].infoRadios[rbs], { y=topUsableY + (hiderow * display.contentHeight/20), time = 400, transition = easing.outQuad } )
+				end
+			end
+		else
+			transition.to( labelInfo[hiderow], { x=10, alpha = 1, time = 400, transition = easing.outQuad } )
+			transition.to( infoButtons[hiderow].infodisplay, { x=display.contentWidth/3, alpha = 1, time = 400, transition = easing.outQuad } )
+		end
+	end
+	out = false
+end
+
 -------------------------------------------
 -- Handle the textField keyboard input
 --
@@ -152,52 +204,8 @@ function NewInfoButton( iX, index, iWidth, iHeight, infoText, headingText )
 	infoButton.heading = headingText
 	infoButton.index = index
 	infoButton.inforesult = nil
-	infoButton.infoRadios = nil
-	
-	local transitionOut = function()
-		for hiderow=1,#infoButtons do
-			if hiderow == infoButton.index then
-				transition.to( labelInfo[hiderow], { y=topUsableY + (display.contentHeight/20), time = 400, transition = easing.outQuad } )
-				if isSimulator and infoButton.heading ~= 'Result' then
-					transition.to( infoButtons[hiderow].infodisplay, { y=topUsableY + (display.contentHeight/20), alpha = 0.2, time = 400, transition = easing.outQuad } )
-				else
-					transition.to( infoButtons[hiderow].infodisplay, { y=topUsableY + (display.contentHeight/20), alpha = 0, time = 400, transition = easing.outQuad } )
-					if infoButton.heading == 'Result' then
-						transition.to( infoButtons[hiderow].inforesult, { time = 400, alpha = 1, transition = easing.outQuad } )
-						for rbs=1, #infoButton.infoRadios do
-							transition.to( infoButton.infoRadios[rbs], { y=topUsableY + (display.contentHeight/20), time = 400, transition = easing.outQuad } )
-						end
-					else
-						transition.to( infoButtons[hiderow].infoinput, { y=topUsableY + (display.contentHeight/20), time = 400, transition = easing.outQuad } )
-					end
-				end
-			else
-				transition.to( labelInfo[hiderow], { x=-labelInfo[hiderow].contentWidth*.5, alpha = 0, time = 400, transition = easing.outQuad } )
-				transition.to( infoButtons[hiderow].infodisplay, { x=display.contentWidth, alpha = 0, time = 400, transition = easing.outQuad } )
-			end
-		end
-		out = true
-	end
-	
-	local transitionIn = function()
-		for hiderow=1,#infoButtons do
-			if hiderow == infoButton.index then
-				transition.to( labelInfo[hiderow], { y=topUsableY + (hiderow*(display.contentHeight/20)), time = 400, transition = easing.outQuad } )
-				transition.to( infoButtons[hiderow].infodisplay, { y=topUsableY + (hiderow*(display.contentHeight/20)), alpha = 1, time = 400, transition = easing.outQuad } )
-				if infoButton.heading == 'Result' then
-					transition.to( infoButtons[hiderow].inforesult, { time = 400, alpha = 0, transition = easing.outQuad } )
-					for rbs=1, #infoButton.infoRadios do
-						transition.to( infoButton.infoRadios[rbs], { y=topUsableY + (hiderow * display.contentHeight/20), time = 400, transition = easing.outQuad } )
-					end
-				end
-			else
-				transition.to( labelInfo[hiderow], { x=10, alpha = 1, time = 400, transition = easing.outQuad } )
-				transition.to( infoButtons[hiderow].infodisplay, { x=display.contentWidth/3, alpha = 1, time = 400, transition = easing.outQuad } )
-			end
-		end
-		out = false
-	end
-	
+	infoButton.infoRadios = {}
+		
 	infoButton.InfoEntry = function( event )
 
 		--native.showAlert( 'Phase', event.phase, { "OK" }, nil )
@@ -219,7 +227,7 @@ function NewInfoButton( iX, index, iWidth, iHeight, infoText, headingText )
 			--print(' Now removing infoinput' )
 			infoButton.infoinput:removeSelf()
 			infoButton.infoinput = nil
-			transitionIn()
+			transitionIn(infoButton.index)
 		elseif infoButton.heading == 'Date' then
 			local len = string.len( infoButton.infoinput.text )
 			if  len == 4 or len == 7 then
@@ -231,16 +239,16 @@ function NewInfoButton( iX, index, iWidth, iHeight, infoText, headingText )
 	
 	infoButton.InfoResult = function( event )
 		infoButton.infodisplay:setLabel( event.target.id )
-		transitionIn()
+		transitionIn(infoButton.index)
 	end
 	
 	local onInfoButtonRelease = function()
 	
 		if isSimulator and infoButton.heading ~= 'Result' then
 			if out then
-				transitionIn()
+				transitionIn(infoButton.index)
 			else
-				transitionOut()
+				transitionOut(infoButton.index)
 			end	
 			infoButton.infodisplay:setLabel( 'Changed' )
 		else
@@ -257,7 +265,7 @@ function NewInfoButton( iX, index, iWidth, iHeight, infoText, headingText )
 						top = infoButton.infodisplay.y,
 						style = "radio",
 						id = '1-0',
-						initialSwitchState = true,
+						initialSwitchState = false,
 						onRelease = infoButton.InfoResult,
 						sheet = whiteWinSheet,
 						frameOff = 2,
@@ -286,9 +294,12 @@ function NewInfoButton( iX, index, iWidth, iHeight, infoText, headingText )
 					infoScreen:insert( infoButton.inforesult )
 				end
 				for rbs=1, #infoButton.infoRadios do
-					infoButton.infoRadios[rbs]:setState( { isOn=infoButton.infodisplay:getLabel() == infoButton.infoRadios[rbs].id } )
+					local setOn = ( infoButton.infodisplay:getLabel() == infoButton.infoRadios[rbs].id)
+					if setOn then
+						infoButton.infoRadios[rbs]:setState( { isOn=setOn } )
+					end
 				end
-				transitionOut()
+				transitionOut(infoButton.index)
 			else
 				local inputFontSize = 14
 				if ( isAndroid ) then
@@ -305,7 +316,7 @@ function NewInfoButton( iX, index, iWidth, iHeight, infoText, headingText )
 					infoButton.infoinput.placeholder = 'YYYY.MM.DD'
 				end
 				infoButton.infoinput.inputType = gameInfoType[headingText]
-				transitionOut()
+				transitionOut(infoButton.index)
 				native.setKeyboardFocus( infoButton.infoinput )
 				--local handlerName = headingtext .. 'Handler'
 				infoButton.infoinput:addEventListener( "userInput", infoButton.InfoEntry )
@@ -313,7 +324,7 @@ function NewInfoButton( iX, index, iWidth, iHeight, infoText, headingText )
 		end
 	end
 	
-	infoButton.infodisplay = widget.newButton
+	local infoDisplayOption = 
 	{
 		x = iX,
 		y = topUsableY + (infoButton.index*(display.contentHeight/20)),
@@ -322,9 +333,20 @@ function NewInfoButton( iX, index, iWidth, iHeight, infoText, headingText )
 		anchorX = 0,
 		anchorY = 0,
 		label = infoText, 
-		labelYOffset = - 1,
+		labelYOffset = -1,
+		emboss = false,
+		shape="roundedRect",
+		cornerRadius = 10,
+		labelColor = { default={ 0, 0, 0, 1 }, over={ .1, 0.1, 0.1, 1 } },
+		fillColor = { default={ 1, 1, 1, 0.2 }, over={ 1, 1, 1, 0.2 } },
+		--strokeColor = { default={ 1, 0.85, 0.3, 1 }, over={ 0, 0, 0, 1 } },
+		--strokeWidth = 1,	
 		onRelease = onInfoButtonRelease
 	}
+	if gameInfoType[headingText] == nil then
+		infoDisplayOption.fillColor = { default={ .9, .9, .9, 0.5 }, over={ 1, 1, 1, 0.4 } }
+	end
+	infoButton.infodisplay = widget.newButton( infoDisplayOption )
 	if gameInfoType[headingText] == nil then
 		infoButton.infodisplay:setEnabled( false )
 	end
@@ -358,7 +380,7 @@ gamelist.DisplayInfo = function( inforow, headingtext, infotext )
 		
 	if labelInfo[inforow] == nil then
 		labelInfo[inforow] = display.newText( headingtext, 0,0, display.contentWidth/2.1, height, "Arial", 14 )
-		labelInfo[inforow]:setFillColor( 0.2, .2, .2 )
+		labelInfo[inforow]:setFillColor( 0.2, 0.2, 0.2 )
 		labelInfo[inforow].x = 10
 		labelInfo[inforow].y = topUsableY + (inforow*(display.contentHeight/20))
 		labelInfo[inforow].anchorX = 0    
@@ -435,13 +457,6 @@ list = widget.newTableView
 }
 --print( list.height )
 
--- Create a background to go behind our tableView
-local bkgndH = 500
-local background = display.newImageRect( listScreen, "background.png", 320, bkgndH )
-background.anchorX = 0
-background.anchorY = 0
-background.y = display.contentHeight - bkgndH + appOriginY
-
 --Insert widgets/images into a group
 listScreen:insert( list )
 
@@ -498,10 +513,18 @@ local buttonHeight = 40
 --Create the New Game button
 newGameButton = widget.newButton
 {
-	width = display.contentWidth / 2,
-	height = buttonHeight,
 	label = "New Game", 
 	labelYOffset = - 1,
+    emboss = false,
+    --properties for a rounded rectangle button...
+    shape="roundedRect",
+	width = display.contentWidth / 2,
+	height = buttonHeight,
+    cornerRadius = 10,
+    labelColor = { default={ 0, 0, 0, 1 }, over={ .1, 0.1, 0.1, 1 } },
+    fillColor = { default={ 1, 1, 1, 0.6 }, over={ 1, 1, 1, 0.6 } },
+    strokeColor = { default={ 1, 0.85, 0.3, 1 }, over={ 0, 0, 0, 1 } },
+    strokeWidth = 6,
 	onRelease = onNewRelease,
 }
 newGameButton.alpha = 1
@@ -512,29 +535,39 @@ listScreen:insert( newGameButton )
 --Create the edit button
 editButton = widget.newButton
 {
-	width = display.contentWidth/3,
-	height = buttonHeight,
 	label = "Edit", 
-	labelYOffset = - 1,
+    emboss = false,
+	shape="roundedRect",
+	width = display.contentWidth/3.5,
+	height = buttonHeight,
+    cornerRadius = 10,
+    labelColor = { default={ 0, 0, 0, 1 }, over={ .1, 0.1, 0.1, 1 } },
+    fillColor = { default={ 1, 1, 1, 0.6 }, over={ 1, 1, 1, 0.6 } },
+    strokeColor = { default={ 1, 0.85, 0.3, 1 }, over={ 0, 0, 0, 1 } },
+    strokeWidth = 5,	
 	onRelease = onEditRelease
 }
 editButton.alpha = 1
-editButton.x = display.contentWidth * 0.668
+editButton.x = display.contentWidth * 0.82
 editButton.y = display.contentHeight - editButton.contentHeight - ( buttonHeight / 2 )
-editButton.anchorX = 0
 infoScreen:insert( editButton )
 
 backButton = widget.newButton
 {
-	width = display.contentWidth/3,
-	height = buttonHeight,
 	label = "Back", 
-	labelYOffset = - 1,
+    emboss = false,
+	shape="roundedRect",
+	width = display.contentWidth/3.5,
+	height = buttonHeight,
+    cornerRadius = 10,
+    labelColor = { default={ 0, 0, 0, 1 }, over={ .1, 0.1, 0.1, 1 } },
+    fillColor = { default={ 1, 1, 1, 0.6 }, over={ 1, 1, 1, 0.6 } },
+    strokeColor = { default={ 1, 0.85, 0.3, 1 }, over={ 0, 0, 0, 1 } },
+    strokeWidth = 5,	
 	onRelease = onBackRelease
 }
 backButton.alpha = 1
-backButton.x = 1
-backButton.anchorX = 0
+backButton.x = display.contentWidth * 0.18
 backButton.y = display.contentHeight - backButton.contentHeight - ( buttonHeight / 2 )
 infoScreen:insert( backButton )
 
@@ -566,15 +599,20 @@ end
 --Create the Email button
 emailButton = widget.newButton
 {
-	width = display.contentWidth/3,
-	height = buttonHeight,
 	label = "Email", 
-	labelYOffset = - 1,
+    emboss = false,
+	shape="roundedRect",
+	width = display.contentWidth/3.5,
+	height = buttonHeight,
+    cornerRadius = 10,
+    labelColor = { default={ 0, 0, 0, 1 }, over={ .1, 0.1, 0.1, 1 } },
+    fillColor = { default={ 1, 1, 1, 0.6 }, over={ 1, 1, 1, 0.6 } },
+    strokeColor = { default={ 1, 0.85, 0.3, 1 }, over={ 0, 0, 0, 1 } },
+    strokeWidth = 5,	
 	onRelease = onEmailRelease
 }
 emailButton.alpha = 1
-emailButton.anchorX = 0
-emailButton.x = display.contentWidth * 0.334
+emailButton.x = display.contentWidth * 0.5
 emailButton.y = display.contentHeight - emailButton.contentHeight - ( buttonHeight / 2 )
 infoScreen:insert( emailButton )
 
@@ -597,6 +635,7 @@ gamelist.FindFiles = function()
 			list:insertRow({ rowHeight = 40,  rowColor = { default={ 1, 1, 1, 0 }, over={ 1, 1, 1, 0.2 } }})
 		end
 	end
+	--list:reloadData()
 	--print( lastFileIndex )
 end
 
@@ -646,13 +685,33 @@ BlackElo:
 Rating of the player playing Black pieces. This is a number between 100 - 2900. For Example: 1400
 
 To return to the Game List screen use the "Back" button.
+
+
 ]]
 
 gamelist.GetHelpInfo = function()
 	if mode == 'gamelist' then
 		return "Game List Help" , gamelisthelptext
 	end
+	for hiderow=1,#infoButtons do
+		if( infoButtons[hiderow].infoinput ) then
+			native.setKeyboardFocus( nil )
+			infoButtons[hiderow].infoinput:removeSelf()
+			infoButtons[hiderow].infoinput = nil
+		end
+		transitionIn(hiderow)
+	end
+	
 	return "Game Info Help" , gameinfohelptext
+end
+
+
+gamelist.handleAndroidBackButton = function()
+	if mode == 'gameinfo' then
+		onBackRelease()
+		return true
+	end
+	return false
 end
 
 gamelist.FindFiles()

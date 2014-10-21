@@ -28,7 +28,7 @@ local editScreenBkgnd = nil
 local numberbuttons = {}
 local letterbuttons = {}
 local piecebuttons = {}
-local kingbuttons = {}
+local specialbuttons = {}
 local movebuttons = {}
 local doneButton
 local bkspButton
@@ -261,11 +261,11 @@ function ChangeButtonColors()
 			piecebuttons[i]:setFillColor( 1,1,1 )
 		end
 	end
-	for i=1,#kingbuttons do
+	for i=1,#specialbuttons do
 		if moveColor == 2 then
-			kingbuttons[i]:setFillColor( 0.15,0.15,0.15 )
+			specialbuttons[i]:setFillColor( 0.15,0.15,0.15 )
 		else
-			kingbuttons[i]:setFillColor( 1,1,1 )
+			specialbuttons[i]:setFillColor( 1,1,1 )
 		end
 	end
 	if moveColor == 1 then
@@ -279,7 +279,7 @@ function ChangeButtonColors()
 	end	
 end
 
-function EnableButtons( numbers, letters, pieces, kings )
+function EnableButtons( numbers, letters, pieces, specials )
 	for i=1,#numberbuttons do
 		numberbuttons[i].alpha = numbers[i]
 	end
@@ -289,8 +289,8 @@ function EnableButtons( numbers, letters, pieces, kings )
 	for i=1,#piecebuttons do
 		piecebuttons[i].alpha = pieces[i]
 	end
-	for i=1,#kingbuttons do
-		kingbuttons[i].alpha = kings[i]
+	for i=1,#specialbuttons do
+		specialbuttons[i].alpha = specials[i]
 	end
 end
 
@@ -384,7 +384,8 @@ end
  
 --local move = { '','','<<','<','>','>>','','' }
 local letters = { 'a','b','c','d','e','f','g','h' }
-local pieces = { 'N','B','x','#','+','Q','R' }
+local pieces = { 'R','N','B','K','Q','B','N','R' }
+local special = { '0-0','x','#','+','0-0-0' }
 
 local buttonInfo = 
 {
@@ -463,9 +464,6 @@ bkspButton = widget.newButton
 }
 editScreen:insert( bkspButton )
 
-buttonInfo.onEvent = handleButtonEvent
-buttonInfo.height = butnHt
-
 -- Create a background to go behind our tableView
 local background = display.newImage( editScreen, "notepad.png", display.contentCenterX - display.actualContentWidth/4, MLD_Top+3, true )
 background.height = MLDisplayHeight-1
@@ -476,6 +474,10 @@ background.anchorY = 0
 editScreen:insert( moveListDisplay )
 
 -- Setup the keyboard
+buttonInfo.onEvent = handleButtonEvent
+buttonInfo.defaultFile = "sqbuttond.png"
+buttonInfo.overFile = "sqbuttono.png"	
+buttonInfo.width = butnWt
 buttonInfo.height = butnHt
 
 -- Number and Letter buttons
@@ -493,34 +495,43 @@ for i=1,8 do
 	buttonInfo.label = letters[i]
 	letterbuttons[i] = widget.newButton(buttonInfo)
 	editScreen:insert( letterbuttons[i] )
-end
-
-for i=1,7 do
+	
 	-- Piece Buttons
-	buttonInfo.left = (i-1) * butnWt
 	buttonInfo.top = baseY - (3*butnHt)
 	buttonInfo.label = pieces[i]
-	if pieces[i] == '#' then
-		buttonInfo.defaultFile = "rtbuttond.png"
-		buttonInfo.overFile = "rtbuttono.png"	
-		buttonInfo.width = butnWt*2
-	else
-		if i > 4 then
-			buttonInfo.left = i * butnWt
-		end
-		buttonInfo.defaultFile = "sqbuttond.png"
-		buttonInfo.overFile = "sqbuttono.png"	
-		buttonInfo.width = butnWt
-	end
 	piecebuttons[#piecebuttons+1] = widget.newButton(buttonInfo)
 	editScreen:insert( piecebuttons[#piecebuttons] )
 end
 
-buttonInfo.defaultFile = "sqbuttond.png"
-buttonInfo.overFile = "sqbuttono.png"	
-buttonInfo.width = butnWt
+local odd = true
+buttonInfo.left = 0
+buttonInfo.top = baseY - (4*butnHt)
+for i=1,7 do
+	-- Special Buttons
+	if odd then
+		buttonInfo.defaultFile = "rtbuttond.png"
+		buttonInfo.overFile = "rtbuttono.png"	
+		buttonInfo.width = butnWt*2
+	else
+		buttonInfo.defaultFile = "sqbuttond.png"
+		buttonInfo.overFile = "sqbuttono.png"	
+		buttonInfo.width = butnWt
+	end
+	buttonInfo.label = special[i]
+	specialbuttons[#specialbuttons+1] = widget.newButton(buttonInfo)
+	editScreen:insert( specialbuttons[#specialbuttons] )
+	if odd then
+		buttonInfo.left = buttonInfo.left + butnWt*2
+	else
+		buttonInfo.left = buttonInfo.left + butnWt
+	end
+	odd = not odd
+end
 
 -- MoveButtons
+	buttonInfo.defaultFile = "sqbuttond.png"
+	buttonInfo.overFile = "sqbuttono.png"	
+	buttonInfo.width = butnWt
 	buttonInfo.top = baseY
 
 	buttonInfo.left = 2 * butnWt
@@ -535,7 +546,6 @@ buttonInfo.width = butnWt
 	movebuttons[#movebuttons+1] = widget.newButton(buttonInfo)	
 	editScreen:insert( movebuttons[#movebuttons] )
 	
---KingButtons
 	buttonInfo.defaultFile = "rtbuttond.png"
 	buttonInfo.overFile = "rtbuttono.png"	
 	buttonInfo.width = butnWt*2
@@ -546,25 +556,6 @@ buttonInfo.width = butnWt
 	movebuttons[#movebuttons+1] = widget.newButton(buttonInfo)	
 	editScreen:insert( movebuttons[#movebuttons] )
 
-	buttonInfo.top = baseY - butnHt*4
-	
-	buttonInfo.onEvent = handleButtonEvent
-	
-	buttonInfo.label = '0-0'
-	buttonInfo.left = butnWt
-	kingbuttons[#kingbuttons+1] = widget.newButton(buttonInfo)	
-	editScreen:insert( kingbuttons[#kingbuttons] )
-
-	buttonInfo.label = 'K'
-	buttonInfo.left = butnWt * 3
-	kingbuttons[#kingbuttons+1] = widget.newButton(buttonInfo)	
-	editScreen:insert( kingbuttons[#kingbuttons] )
-	
-	buttonInfo.label = '0-0-0'
-	buttonInfo.left = butnWt * 5
-	kingbuttons[#kingbuttons+1] = widget.newButton(buttonInfo)	
-	editScreen:insert( kingbuttons[#kingbuttons] )
-	
 --Done Button
 	buttonInfo.top = appOriginY
 	buttonInfo.label = 'Save'
