@@ -24,3 +24,5 @@
 - (1.10) Added support for Android "Back" button
 - (1.11) Help buttons have a rotating transition
 - (1.11) New Keyboard layout
+- (1.12) Change over to Cross Install ads
+- (1.12) Fixed some transition bugs in the Info edit screen

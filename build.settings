@@ -19,10 +19,14 @@ settings =
     plugins =
     {
         -- key is the name passed to Lua's 'require()'
-        ["CoronaProvider.ads.inneractive"] =
-        {
-            -- required
-            publisherId = "com.inner-active",
-        },
+--~         ["CoronaProvider.ads.inneractive"] =
+--~         {
+--~             -- required
+--~             publisherId = "com.inner-active",
+--~         },
+		["CoronaProvider.ads.crossinstall"] =
+		{
+			publisherId = "com.crossinstall",
+		},
     }, 
 }

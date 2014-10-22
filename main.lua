@@ -1,5 +1,5 @@
 --Global Variables
-version = 1.11
+version = 1.12
 moveCheckVersion = 2.0
 isSimulator = "simulator" == system.getInfo("environment")
 isAndroid = "Android" == system.getInfo( "platformName" )
@@ -7,14 +7,6 @@ bannerEnd = 53
 appOriginY = display.screenOriginY + bannerEnd
 titleBarHeight = 32
 transitionTime = 500
-
-wbGradient = {
-	type = 'gradient',
-	color1 = { 1, 1, 1, .5 }, 
-	color2 = { .1, .1, .1, .5 },
-	direction = "up"
-}
-
 
 moveList = {}
 gameInfo = 
@@ -26,8 +18,8 @@ gameInfo =
 	White = '',
 	Black = '',
 	Result = '',
-	WhiteElo = '',
-	BlackElo = '',
+	WhiteELO = '',
+	BlackELO = '',
 	Source = 'ChessNotes',
 }
 
@@ -40,8 +32,8 @@ gameInfoType =
 	White = 'default',
 	Black = 'default',
 	Result = 'radio',
-	WhiteElo = 'number',
-	BlackElo = 'number',
+	WhiteELO = 'number',
+	BlackELO = 'number',
 }
 
 function GetMoveListPGN()
@@ -118,11 +110,14 @@ function SaveGame( filename )
 end
 
 
-local adNetwork = "inneractive"
-local appID = nil
+--~ local adNetwork = "inneractive"
+--~ local appID = nil
+--~ local ads = require "ads"
+--~ -- initialize ad network:
+--~ ads.init( adNetwork, appID )
+
 local ads = require "ads"
--- initialize ad network:
-ads.init( adNetwork, appID )
+ads.init( "crossinstall", "QlCk", nil )
 
 -- Create a background to go behind our tableView
 local bkgndH = 500
@@ -204,7 +199,8 @@ local function appState(event)
 end
 
 if not isSimulator then
-	ads.show( "banner", { x=0, y=0, interval=30, testMode=true } )	-- standard interval for "inneractive" is 60 seconds
+	--ads.show( "banner", { x=0, y=0, interval=30, testMode=true } )	-- standard interval for "inneractive" is 60 seconds
+	ads.show( "banner", "topbanner", { x=0, y=0, w=320, h=50, timeout=15 } )
 end
 
 local function onKeyEvent( event )

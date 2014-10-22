@@ -268,13 +268,21 @@ function ChangeButtonColors()
 			specialbuttons[i]:setFillColor( 1,1,1 )
 		end
 	end
+	for i=1,#movebuttons do
+		if moveColor == 2 then
+			movebuttons[i]:setFillColor( 0.15,0.15,0.15 )
+		else
+			movebuttons[i]:setFillColor( 1,1,1 )
+		end
+	end
+
 	if moveColor == 1 then
 		moveDisplay:setFillColor( 0.1,0.1,0.1 )
 		moveDisplayBkgnd:setFillColor( 1, 1, 1 )
 		bkspButton:setFillColor( 0, 0, 0, 0.2 )
 	else
 		moveDisplay:setFillColor( 1, 1, 1 )
-		moveDisplayBkgnd:setFillColor( 0.1,0.1,0.1 )
+		moveDisplayBkgnd:setFillColor( 0.1, 0.1, 0.1 )
 		bkspButton:setFillColor( 1, 1, 1, 0.9 )
 	end	
 end
@@ -384,8 +392,8 @@ end
  
 --local move = { '','','<<','<','>','>>','','' }
 local letters = { 'a','b','c','d','e','f','g','h' }
-local pieces = { 'R','N','B','K','Q','B','N','R' }
-local special = { '0-0','x','#','+','0-0-0' }
+local pieces = { 'R','N','B','Q','K','B','N','R' }
+local special = { '0-0-0','x','#','+','0-0' }
 
 local buttonInfo = 
 {
@@ -409,6 +417,12 @@ editScreen = display.newGroup()
 editor.screens:insert( editScreen )
 
 -- Add controls to Edit Screen
+wbGradient = {
+	type = 'gradient',
+	color1 = { 1, 1, 1, .5 }, 
+	color2 = { .1, .1, .1, .5 },
+	direction = "down"
+}
 editScreenBkgnd = display.newRect( 0, 0, display.actualContentWidth, display.actualContentHeight, 18 )
 editScreenBkgnd:setFillColor( wbGradient )
 editScreenBkgnd.anchorX = 0
@@ -557,11 +571,22 @@ end
 	editScreen:insert( movebuttons[#movebuttons] )
 
 --Done Button
-	buttonInfo.top = appOriginY
-	buttonInfo.label = 'Save'
-	buttonInfo.left = butnWt * 3
-	buttonInfo.onEvent = Done
-	doneButton = widget.newButton(buttonInfo)	
+	doneButton = widget.newButton
+	{
+		label = "Save", 
+		emboss = false,
+		top = appOriginY,
+		left = butnWt * 3,
+		shape="roundedRect",
+		width = butnWt*2,
+		height = 35,
+		cornerRadius = 10,
+		labelColor = { default={ 0, 0, 0, 1 }, over={ .1, 0.1, 0.1, 1 } },
+		fillColor = { default={ 1, 1, 1, 1 }, over={ 1, 1, 1, 1 } },
+		strokeColor = { default={ 1, 0.85, 0.3, 1 }, over={ 0, 0, 0, 1 } },
+		strokeWidth = 4,	
+		onRelease = Done,
+	}
 	editScreen:insert( doneButton )
 
 
@@ -581,6 +606,8 @@ local gameedithelptext = [[
 This screen shows you the list of moves that were made in the game. It also displays the move that is currently being added or edited.
 
 The screen has a keyboard that you can use to enter or edit the moves made in the game.
+The keyboard and current move display change color to indicate which side would move next.
+
 The keyboard has the following keys:
 
 K; King
@@ -615,8 +642,6 @@ Enter: Enter the move into the move list
 <x: Backspace, clear the last entered key in the move currently being edited
 
 Save: Save the current state of the game and go back to the list of games
-
-The keyboard and current move display change color to indicate which side would move next.
 
 
 ]]

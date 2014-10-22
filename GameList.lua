@@ -12,6 +12,10 @@ infoButtons = {}
 local lastFileIndex=1
 local mode = "gamelist"
 local out = false
+local editButton = nil
+local emailButton = nil
+local backButton = nil
+local buttonHeight = 40
 
 -- Image sheet options and declaration
 local options = {
@@ -103,9 +107,6 @@ gamelist.screens:insert( infoScreen )
 
 local itemSelected = ''
 
--- Forward reference for our edit button & tableview
-local list, editButton, backButton
-
 gamelist.TransitionToList = function()
 
 	transition.to( infoScreen, { alpha=0, time = 400, transition = easing.outQuad } )
@@ -172,6 +173,9 @@ local transitionOut = function( currentIndex )
 			transition.to( infoButtons[hiderow].infodisplay, { x=display.contentWidth, alpha = 0, time = 400, transition = easing.outQuad } )
 		end
 	end
+	transition.to( editButton, { y=display.contentHeight+buttonHeight*2, alpha = 0, time = 400, transition = easing.outQuad } )
+	transition.to( emailButton, { y=display.contentHeight+buttonHeight*2, alpha = 0, time = 400, transition = easing.outQuad } )
+	transition.to( backButton, { y=display.contentHeight+buttonHeight*2, alpha = 0, time = 400, transition = easing.outQuad } )
 	out = true
 end
 
@@ -191,6 +195,9 @@ local transitionIn = function( currentIndex )
 			transition.to( infoButtons[hiderow].infodisplay, { x=display.contentWidth/3, alpha = 1, time = 400, transition = easing.outQuad } )
 		end
 	end
+	transition.to( editButton, { y=display.contentHeight-buttonHeight*1.5, alpha = 1, time = 400, transition = easing.outQuad } )
+	transition.to( emailButton, { y=display.contentHeight-buttonHeight*1.5, alpha = 1, time = 400, transition = easing.outQuad } )
+	transition.to( backButton, { y=display.contentHeight-buttonHeight*1.5, alpha = 1, time = 400, transition = easing.outQuad } )
 	out = false
 end
 
@@ -243,7 +250,6 @@ function NewInfoButton( iX, index, iWidth, iHeight, infoText, headingText )
 	end
 	
 	local onInfoButtonRelease = function()
-	
 		if isSimulator and infoButton.heading ~= 'Result' then
 			if out then
 				transitionIn(infoButton.index)
@@ -337,6 +343,7 @@ function NewInfoButton( iX, index, iWidth, iHeight, infoText, headingText )
 		emboss = false,
 		shape="roundedRect",
 		cornerRadius = 10,
+		fontSize = 16,
 		labelColor = { default={ 0, 0, 0, 1 }, over={ .1, 0.1, 0.1, 1 } },
 		fillColor = { default={ 1, 1, 1, 0.2 }, over={ 1, 1, 1, 0.2 } },
 		--strokeColor = { default={ 1, 0.85, 0.3, 1 }, over={ 0, 0, 0, 1 } },
@@ -379,7 +386,7 @@ gamelist.DisplayInfo = function( inforow, headingtext, infotext )
 	infoButtons[inforow].infodisplay:setLabel( infotext )
 		
 	if labelInfo[inforow] == nil then
-		labelInfo[inforow] = display.newText( headingtext, 0,0, display.contentWidth/2.1, height, "Arial", 14 )
+		labelInfo[inforow] = display.newText( headingtext, 0,0, display.contentWidth/2.1, height, "Arial", 16 )
 		labelInfo[inforow]:setFillColor( 0.2, 0.2, 0.2 )
 		labelInfo[inforow].x = 10
 		labelInfo[inforow].y = topUsableY + (inforow*(display.contentHeight/20))
@@ -508,8 +515,6 @@ local function onBackRelease()
 	gamelist.TransitionToList()
 end
 
-local buttonHeight = 40
-
 --Create the New Game button
 newGameButton = widget.newButton
 {
@@ -549,7 +554,7 @@ editButton = widget.newButton
 }
 editButton.alpha = 1
 editButton.x = display.contentWidth * 0.82
-editButton.y = display.contentHeight - editButton.contentHeight - ( buttonHeight / 2 )
+editButton.y = display.contentHeight - buttonHeight * 1.5
 infoScreen:insert( editButton )
 
 backButton = widget.newButton
@@ -568,7 +573,7 @@ backButton = widget.newButton
 }
 backButton.alpha = 1
 backButton.x = display.contentWidth * 0.18
-backButton.y = display.contentHeight - backButton.contentHeight - ( buttonHeight / 2 )
+backButton.y = display.contentHeight - buttonHeight * 1.5
 infoScreen:insert( backButton )
 
 local function onEmailRelease( event )
@@ -613,7 +618,7 @@ emailButton = widget.newButton
 }
 emailButton.alpha = 1
 emailButton.x = display.contentWidth * 0.5
-emailButton.y = display.contentHeight - emailButton.contentHeight - ( buttonHeight / 2 )
+emailButton.y = display.contentHeight - buttonHeight * 1.5
 infoScreen:insert( emailButton )
 
 gamelist.FindFiles = function()
@@ -708,6 +713,20 @@ end
 
 gamelist.handleAndroidBackButton = function()
 	if mode == 'gameinfo' then
+		currentRow = 0
+		for hiderow=1,#infoButtons do
+			if infoButtons[hiderow].infoinput  then
+				native.setKeyboardFocus( nil )
+				infoButtons[hiderow].infoinput:removeSelf()
+				infoButtons[hiderow].infoinput = nil
+				currentRow = hiderow
+			elseif infoButtons[hiderow].inforesult then
+				currentRow = hiderow
+			end
+		end	
+		if currentRow then 			
+			transitionIn(currentRow)
+		end
 		onBackRelease()
 		return true
 	end

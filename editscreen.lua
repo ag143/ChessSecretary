@@ -590,6 +590,8 @@ local gameedithelptext = [[
 This screen shows you the list of moves that were made in the game. It also displays the move that is currently being added or edited.
 
 The screen has a keyboard that you can use to enter or edit the moves made in the game.
+The keyboard and current move display change color to indicate which side would move next.
+
 The keyboard has the following keys:
 
 K; King
@@ -624,8 +626,6 @@ Enter: Enter the move into the move list
 <x: Backspace, clear the last entered key in the move currently being edited
 
 Save: Save the current state of the game and go back to the list of games
-
-The keyboard and current move display change color to indicate which side would move next.
 
 
 ]]
