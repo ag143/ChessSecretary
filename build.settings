@@ -24,9 +24,13 @@ settings =
 --~             -- required
 --~             publisherId = "com.inner-active",
 --~         },
-		["CoronaProvider.ads.crossinstall"] =
-		{
-			publisherId = "com.crossinstall",
-		},
+--~ 		["CoronaProvider.ads.crossinstall"] =
+--~ 		{
+--~ 			publisherId = "com.crossinstall",
+--~ 		},
+        ["plugin.google.play.services"] =
+        {
+            publisherId = "com.coronalabs"
+        },		
     }, 
 }

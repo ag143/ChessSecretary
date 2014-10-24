@@ -1,5 +1,5 @@
 --Global Variables
-version = 1.12
+version = 1.13
 moveCheckVersion = 2.0
 isSimulator = "simulator" == system.getInfo("environment")
 isAndroid = "Android" == system.getInfo( "platformName" )
@@ -116,8 +116,11 @@ end
 --~ -- initialize ad network:
 --~ ads.init( adNetwork, appID )
 
+--~ local ads = require "ads"
+--~ ads.init( "crossinstall", "QlCk", nil )
+
 local ads = require "ads"
-ads.init( "crossinstall", "QlCk", nil )
+ads.init( 'admob', 'ca-app-pub-2270148772893486/6750641653' )
 
 -- Create a background to go behind our tableView
 local bkgndH = 500
@@ -200,7 +203,7 @@ end
 
 if not isSimulator then
 	--ads.show( "banner", { x=0, y=0, interval=30, testMode=true } )	-- standard interval for "inneractive" is 60 seconds
-	ads.show( "banner", "topbanner", { x=0, y=0, w=320, h=50, timeout=15 } )
+	ads.show( "banner", { x=0, y=0 } )
 end
 
 local function onKeyEvent( event )
