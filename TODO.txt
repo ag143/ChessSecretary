@@ -36,4 +36,6 @@
 - (1.14) Increased font size of input fields
 - (1.14) Fix bug where email would only send move list and not game info
 - (1.14) Forced order of game info
+- (1.15) Feedback Button
+- (1.15) Credits Button
 
