@@ -26,3 +26,14 @@
 - (1.11) New Keyboard layout
 - (1.12) Change over to Cross Install ads
 - (1.12) Fixed some transition bugs in the Info edit screen
+- (1.13) Changed to Google AdModv2 as the ads provider
+- (1.14) Added vibrate to the buttons and click sound to keyboard
+- (1.14) New keyboard layout based on Blake's feedback
+- (1.14) Added the "!", "?", and "=" keys
+- (1.14) Changed "Edit" button to "Notate" button
+- (1.14) Next & Prev move button alternate between black and white moves
+- (1.14) Game list responds to tap and release
+- (1.14) Increased font size of input fields
+- (1.14) Fix bug where email would only send move list and not game info
+- (1.14) Forced order of game info
+

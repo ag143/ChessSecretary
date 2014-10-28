@@ -212,6 +212,16 @@ function NewInfoButton( iX, index, iWidth, iHeight, infoText, headingText )
 	infoButton.index = index
 	infoButton.inforesult = nil
 	infoButton.infoRadios = {}
+	
+	local CapitalizeFirstLetters = function( inputStr )
+		inputStr = string.gsub( inputStr, "^(%a)", function (s)
+           return string.upper(s)
+         end)
+		inputStr = string.gsub( inputStr, " (%a)", function (s)
+           return ' '..string.upper(s)
+         end)
+		return inputStr
+	end
 		
 	infoButton.InfoEntry = function( event )
 
@@ -225,7 +235,7 @@ function NewInfoButton( iX, index, iWidth, iHeight, infoText, headingText )
 				infoButton.infodisplay:setLabel( 'Not Specified' )
 				--gameInfo[infoButton.heading] = ''
 			else
-				infoButton.infodisplay:setLabel( infoButton.infoinput.text )
+				infoButton.infodisplay:setLabel( CapitalizeFirstLetters( infoButton.infoinput.text ) )
 				--gameInfo[infoButton.heading] = infoButton.infoinput.text
 			end
 			
@@ -235,12 +245,12 @@ function NewInfoButton( iX, index, iWidth, iHeight, infoText, headingText )
 			infoButton.infoinput:removeSelf()
 			infoButton.infoinput = nil
 			transitionIn(infoButton.index)
-		elseif infoButton.heading == 'Date' then
-			local len = string.len( infoButton.infoinput.text )
-			if  len == 4 or len == 7 then
-				infoButton.infoinput.text = infoButton.infoinput.text .. '.'
-			end
-			infoButton.infoinput.text = string.gsub( infoButton.infoinput.text, '%.%.', '%.' )
+--~ 		elseif infoButton.heading == 'Date' then
+--~ 			local len = string.len( infoButton.infoinput.text )
+--~ 			if  len == 4 or len == 7 then
+--~ 				infoButton.infoinput.text = infoButton.infoinput.text .. '.'
+--~ 			end
+--~ 			infoButton.infoinput.text = string.gsub( infoButton.infoinput.text, '%.%.', '%.' )
 		end
 	end
 	
@@ -256,7 +266,7 @@ function NewInfoButton( iX, index, iWidth, iHeight, infoText, headingText )
 			else
 				transitionOut(infoButton.index)
 			end	
-			infoButton.infodisplay:setLabel( 'Changed' )
+			infoButton.infodisplay:setLabel( CapitalizeFirstLetters( 'changed' ) )
 		else
 			if infoButton.heading == 'Result'  then
 				if infoButton.inforesult == nil then
@@ -307,10 +317,10 @@ function NewInfoButton( iX, index, iWidth, iHeight, infoText, headingText )
 				end
 				transitionOut(infoButton.index)
 			else
-				local inputFontSize = 14
-				if ( isAndroid ) then
-					inputFontSize = inputFontSize - 4
-				end
+				local inputFontSize = 20
+--~ 				if ( isAndroid ) then
+--~ 					inputFontSize = inputFontSize - 4
+--~ 				end
 
 				infoButton.infoinput = native.newTextField( infoButton.infodisplay.x, infoButton.infodisplay.y, infoButton.infodisplay.width, infoButton.infodisplay.height )
 				infoButton.infoinput.anchorX = 0
@@ -336,14 +346,15 @@ function NewInfoButton( iX, index, iWidth, iHeight, infoText, headingText )
 		y = topUsableY + (infoButton.index*(display.contentHeight/20)),
 		width = iWidth,
 		height = iHeight,
-		anchorX = 0,
-		anchorY = 0,
+		--anchorX = 0,
+		--anchorY = 0,
 		label = infoText, 
 		labelYOffset = -1,
 		emboss = false,
 		shape="roundedRect",
 		cornerRadius = 10,
 		fontSize = 16,
+		font = native.systemFont,
 		labelColor = { default={ 0, 0, 0, 1 }, over={ .1, 0.1, 0.1, 1 } },
 		fillColor = { default={ 1, 1, 1, 0.2 }, over={ 1, 1, 1, 0.2 } },
 		--strokeColor = { default={ 1, 0.85, 0.3, 1 }, over={ 0, 0, 0, 1 } },
@@ -351,7 +362,8 @@ function NewInfoButton( iX, index, iWidth, iHeight, infoText, headingText )
 		onRelease = onInfoButtonRelease
 	}
 	if gameInfoType[headingText] == nil then
-		infoDisplayOption.fillColor = { default={ .9, .9, .9, 0.5 }, over={ 1, 1, 1, 0.4 } }
+		print( headingText )
+		infoDisplayOption.fillColor = { default={ .95, .95, .95, 0.8 }, over={ 1, 1, 1, 0.4 } }
 	end
 	infoButton.infodisplay = widget.newButton( infoDisplayOption )
 	if gameInfoType[headingText] == nil then
@@ -359,7 +371,7 @@ function NewInfoButton( iX, index, iWidth, iHeight, infoText, headingText )
 	end
 	infoButton.infodisplay.alpha = 1
 	infoButton.infodisplay.anchorX = 0
-	infoButton.infodisplay.anchorY = 0
+	infoButton.infodisplay.anchorY = 0.13
 	return infoButton
 end
 
@@ -386,7 +398,7 @@ gamelist.DisplayInfo = function( inforow, headingtext, infotext )
 	infoButtons[inforow].infodisplay:setLabel( infotext )
 		
 	if labelInfo[inforow] == nil then
-		labelInfo[inforow] = display.newText( headingtext, 0,0, display.contentWidth/2.1, height, "Arial", 16 )
+		labelInfo[inforow] = display.newText( headingtext, 0,0, display.contentWidth/2.1, height, native.systemFont, 16 )
 		labelInfo[inforow]:setFillColor( 0.2, 0.2, 0.2 )
 		labelInfo[inforow].x = 10
 		labelInfo[inforow].y = topUsableY + (inforow*(display.contentHeight/20))
@@ -397,14 +409,34 @@ gamelist.DisplayInfo = function( inforow, headingtext, infotext )
 	labelInfo[inforow].text = headingtext
 end
 
+local infoDataOrder = 
+{
+	'Source',
+	'Date',
+	'Site',
+	'Event',
+	'Round',
+	'Result',
+	'White',
+	'WhiteELO',
+	'Black',
+	'BlackELO',
+}
+
 gamelist.LoadInfo = function()
 	LoadGame( itemSelected )
 	local inforow = 1
 	gamelist.DisplayInfo( inforow, 'Game',  itemSelected )
-	inforow = inforow + 1
+	--inforow = inforow + 1
 	for heading, info in pairs(gameInfo) do
+		for index=1, #infoDataOrder do
+			if heading == infoDataOrder[index] then
+				inforow = index + 1
+				break
+			end
+		end
 		gamelist.DisplayInfo( inforow, heading, info )
-		inforow = inforow + 1
+		--inforow = inforow + 1
 	end
 end
 
@@ -443,7 +475,7 @@ local function onRowTouch( event )
 	local phase = event.phase
 	local row = event.target
 	
-	if "release" == phase then
+	if "press" == phase or "release" == phase then
 		-- Update the item selected text
 		itemSelected = gamelist.files[row.index]
 		newFile = false
@@ -456,7 +488,7 @@ list = widget.newTableView
 {
 	top = topUsableY,
 	width = display.contentWidth, 
-	height = display.contentHeight - topUsableY,
+	height = display.contentHeight - topUsableY - buttonHeight * 2.0,
 	--maskFile = "background.png",
 	hideBackground = true,
 	onRowRender = onRowRender,
@@ -469,11 +501,12 @@ listScreen:insert( list )
 
 --Handle the edit button release event
 local function onNewRelease()
-		-- Update the item selected text
-		newFile = true
-		itemSelected = 'Game' .. lastFileIndex .. '.pgn'
-		lastFileIndex = lastFileIndex + 1
-		gamelist.TransitionToItem()
+	system.vibrate()
+	-- Update the item selected text
+	newFile = true
+	itemSelected = 'Game' .. lastFileIndex .. '.pgn'
+	lastFileIndex = lastFileIndex + 1
+	gamelist.TransitionToItem()
 end
 
 local function GrabAndHideInput()
@@ -495,6 +528,7 @@ end
 
 --Handle the edit button release event
 local function onEditRelease()
+	system.vibrate()
 	GrabAndHideInput()
 	if newFile == true then
 		gamelist.files[#gamelist.files + 1] = gamelist.selectedFile
@@ -507,6 +541,7 @@ end
 
 --Handle the edit button release event
 local function onBackRelease()
+	system.vibrate()
 	--Transition in the list, transition out the item selected text and the edit button
 	GrabAndHideInput()
 	SaveGame( itemSelected )
@@ -518,29 +553,114 @@ end
 --Create the New Game button
 newGameButton = widget.newButton
 {
-	label = "New Game", 
+	label = "NewGame", 
 	labelYOffset = - 1,
     emboss = false,
     --properties for a rounded rectangle button...
     shape="roundedRect",
-	width = display.contentWidth / 2,
+	width = display.contentWidth / 3.5,
 	height = buttonHeight,
     cornerRadius = 10,
     labelColor = { default={ 0, 0, 0, 1 }, over={ .1, 0.1, 0.1, 1 } },
     fillColor = { default={ 1, 1, 1, 0.6 }, over={ 1, 1, 1, 0.6 } },
     strokeColor = { default={ 1, 0.85, 0.3, 1 }, over={ 0, 0, 0, 1 } },
     strokeWidth = 6,
+	fontSize = 16,
 	onRelease = onNewRelease,
 }
 newGameButton.alpha = 1
 newGameButton.x = display.contentWidth * 0.5
-newGameButton.y = display.contentHeight - newGameButton.contentHeight
+newGameButton.y = display.contentHeight - buttonHeight * 1.5
 listScreen:insert( newGameButton )
+
+local function onCreditsRelease( event )
+	system.vibrate()
+	mode = 'credits'
+	forceHelp = true
+end
+
+creditsButton = widget.newButton
+{
+	label = "Credits", 
+	labelYOffset = - 1,
+    emboss = false,
+    --properties for a rounded rectangle button...
+    shape="roundedRect",
+	width = display.contentWidth / 3.5,
+	height = buttonHeight,
+    cornerRadius = 10,
+    labelColor = { default={ 0, 0, 0, 1 }, over={ .1, 0.1, 0.1, 1 } },
+    fillColor = { default={ 1, 1, 1, 0.6 }, over={ 1, 1, 1, 0.6 } },
+    strokeColor = { default={ 1, 0.85, 0.3, 1 }, over={ 0, 0, 0, 1 } },
+    strokeWidth = 6,
+	fontSize = 16,
+	onRelease = onCreditsRelease,
+}
+creditsButton.alpha = 1
+creditsButton.x = display.contentWidth * 0.18
+creditsButton.y = display.contentHeight - buttonHeight * 1.5
+listScreen:insert( creditsButton )
+
+local function onFeedbackRelease( event )
+	system.vibrate()
+	-- compose an HTML email with two attachments
+	local emailBody = '------------- APP INFO -------------\n'
+	emailBody = emailBody .. 'Version: ' .. tostring( version ) .. '\n'
+	emailBody = emailBody .. 'Platform: ' .. system.getInfo( "platformName" ) .. '\n'
+	emailBody = emailBody .. '------------- ### #### -------------\n\n'
+	
+	local options =
+	{
+		to = { 'boardworksgames+chessnotes@gmail.com' },
+		--cc = { "john.smith@somewhere.com", "jane.smith@somewhere.com" },
+		subject = 'ChessNotes: Feedback',
+		isBodyHtml = false,
+		--body = "<html><body>I scored over <b>9000</b>!!! Can you do better?</body></html>",
+		body = emailBody,
+--	   attachment =
+--	   {
+--		  { baseDir=system.ResourceDirectory, filename="email.png", type="image" },
+--		  { baseDir=system.ResourceDirectory, filename="coronalogo.png", type="image" },
+--	   },
+	}
+	local result = native.showPopup( "mail", options )
+	print( options.body )
+	if not result then
+		print( "Mail Not supported/setup on this device" )
+		native.showAlert( "Alert!",	"Mail not supported/setup on this device.", { "OK" })
+	end
+	-- NOTE: options table (and all child properties) are optional
+end
+
+
+
+feedbackButton = widget.newButton
+{
+	label = "Feedback", 
+	labelYOffset = - 1,
+    emboss = false,
+    --properties for a rounded rectangle button...
+    shape="roundedRect",
+	width = display.contentWidth / 3.5,
+	height = buttonHeight,
+    cornerRadius = 10,
+    labelColor = { default={ 0, 0, 0, 1 }, over={ .1, 0.1, 0.1, 1 } },
+    fillColor = { default={ 1, 1, 1, 0.6 }, over={ 1, 1, 1, 0.6 } },
+    strokeColor = { default={ 1, 0.85, 0.3, 1 }, over={ 0, 0, 0, 1 } },
+    strokeWidth = 6,
+	fontSize = 16,
+	onRelease = onFeedbackRelease,
+}
+feedbackButton.alpha = 1
+feedbackButton.x = display.contentWidth * 0.82
+feedbackButton.y = display.contentHeight - buttonHeight * 1.5
+listScreen:insert( feedbackButton )
+
 
 --Create the edit button
 editButton = widget.newButton
 {
-	label = "Edit", 
+	label = "Notate", 
     emboss = false,
 	shape="roundedRect",
 	width = display.contentWidth/3.5,
@@ -553,7 +673,7 @@ editButton = widget.newButton
 	onRelease = onEditRelease
 }
 editButton.alpha = 1
-editButton.x = display.contentWidth * 0.82
+editButton.x = display.contentWidth * 0.5
 editButton.y = display.contentHeight - buttonHeight * 1.5
 infoScreen:insert( editButton )
 
@@ -577,6 +697,7 @@ backButton.y = display.contentHeight - buttonHeight * 1.5
 infoScreen:insert( backButton )
 
 local function onEmailRelease( event )
+	system.vibrate()
 	-- compose an HTML email with two attachments
 	local options =
 	{
@@ -585,7 +706,7 @@ local function onEmailRelease( event )
 	   subject = gamelist.selectedFile,
 	   isBodyHtml = false,
 	   --body = "<html><body>I scored over <b>9000</b>!!! Can you do better?</body></html>",
-	   body = GetMoveListPGN(),
+	   body = GetSaveGameText(),
 --	   attachment =
 --	   {
 --		  { baseDir=system.ResourceDirectory, filename="email.png", type="image" },
@@ -617,7 +738,7 @@ emailButton = widget.newButton
 	onRelease = onEmailRelease
 }
 emailButton.alpha = 1
-emailButton.x = display.contentWidth * 0.5
+emailButton.x = display.contentWidth * 0.82
 emailButton.y = display.contentHeight - buttonHeight * 1.5
 infoScreen:insert( emailButton )
 
@@ -644,12 +765,61 @@ gamelist.FindFiles = function()
 	--print( lastFileIndex )
 end
 
+local creditstext = [[
+Programming & Art
+
+Sandeep Kharkar
+  Co-Owner Boardworks LLC
+______________
+
+Keyboard Click Sound:
+
+Created by "lebcraftlp"  
+  http://lebtv.tk/ 
+
+The original audio was edited to remove silence before and after the click sound.
+	
+Creative Commons License
+  http://bit.ly/1jmalQx
+______________
+
+Beta Test and Feedback:
+
+Blake Walker 
+  Chess Coach 
+  Software QA Professional
+
+Dave Haslam
+  Co-Owner Boardworks LLC
+
+Pallavi Ranade 
+  Software Engineer
+  Chess Parent
+
+Anoushka Kharkar
+  Chess Kid
+
+Vismaya Kharkar
+  "Kill the King!" 
+______________
+
+App Framework:
+
+Corona Labs
+  http://coronalabs.com/
+
+
+
+]]
+
 local gamelisthelptext = [[
 This screen lists the current games that you have saved. Here, you can choose to add a new game or edit a current game. Scroll up and down by swiping up or down on your phone.
 
 To add a new game use the "New Game" button. Games are named automatically and sequentially and cannot be renamed at this time.
 
 To edit a game that you have saved touch the row on which the game is listed. This will take you to the Game Information screen.
+
+
 ]]
 
 
@@ -697,7 +867,10 @@ To return to the Game List screen use the "Back" button.
 gamelist.GetHelpInfo = function()
 	if mode == 'gamelist' then
 		return "Game List Help" , gamelisthelptext
+	elseif mode == 'credits' then
+		return 'Credits', creditstext
 	end
+	
 	for hiderow=1,#infoButtons do
 		if( infoButtons[hiderow].infoinput ) then
 			native.setKeyboardFocus( nil )

@@ -32,6 +32,13 @@ local specialbuttons = {}
 local movebuttons = {}
 local doneButton
 local bkspButton
+local soundID = 0
+if isAndroid then
+	soundID = media.newEventSound( "click.mp3" )
+else
+	soundID = media.newEventSound( "click.aiff" )
+end
+
 editor.editDone = false
 
 local moveDisplay
@@ -133,10 +140,25 @@ local function onMoveListRowRender( event )
 	--print( display.actualContentHeight/3 )
 end
 
+--~ local function PrintTable( t, l, max )
+--~ 	for k,v in pairs( t ) do
+--~ 		if l < max then
+--~ 			if type( v ) == 'table' then
+--~ 				l = l + 1
+--~ 				print( string.rep( '\t', l ) .. k )
+--~ 				PrintTable(v, l, max)
+--~ 				l = l - 1
+--~ 			end
+--~ 		end
+--~ 		print( string.rep( '\t', l ), k, v )
+--~ 	end	
+--~ end
+
 local function onMoveListRowTouch( event )
 	local phase = event.phase
 	local row = event.target
 	
+	--PrintTable( row, 0, 4 )
 	if "release" == phase then
 		-- Update the item selected text
 		moveNum = row.index
@@ -309,8 +331,10 @@ local function handleButtonEvent( event )
 		--print( 'Button ' .. event.target:getLabel() .. ' was pressed and released' )
 		if event.target.alpha == 1 then
 			if currMove:len() < 8 then
+				media.playEventSound( soundID )
 				currMove = currMove .. event.target:getLabel()
 			else
+				system.vibrate()
 				moveDisplay:setFillColor( 1, 0, 0 )
 			end
 			UpdateMoveDisplay( currMove )
@@ -320,7 +344,7 @@ end
 
 local function Done( event )
 	if editor.editDone == false then
-	
+		system.vibrate()
 		if string.find( editor.filename, '.pgn' ) == nil then
 			editor.filename = editor.filename..'.pgn'
 		end
@@ -335,12 +359,14 @@ end
 
 local function EnterMove( event )
 	if ( "ended" == event.phase ) then
+		media.playEventSound( soundID )
 		AddMove( false )
 	end
 end
 
 local function BkspMove( event )
 	if ( "ended" == event.phase ) then
+		media.playEventSound( soundID )
 		if currMove:len() == 8 then
 			if moveColor == 1 then
 				moveDisplay:setFillColor( 0.1,0.1,0.1 )
@@ -360,32 +386,47 @@ end
 
 local function PrevMove( event )
 	if ( "ended" == event.phase ) then
+		media.playEventSound( soundID )
 		if moveNum > 1 then
-			moveNum = moveNum - 1
-			currMove = moveList[moveNum][1]
+			if moveColor == 2 then
+				moveColor = 1
+			else
+				moveNum = moveNum - 1
+				moveColor = 2
+			end
+		elseif moveColor == 2 then
 			moveColor = 1
-			UpdateMoveDisplay( currMove )
-			ChangeButtonColors()
-			ScrollToRow( moveNum )
 		end
+		currMove = moveList[moveNum][moveColor]
+		UpdateMoveDisplay( currMove )
+		ChangeButtonColors()
+		ScrollToRow( moveNum )		
 		--print( moveNum, moveColor, maxMoveNum )
 	end
 end
 
 local function NextMove( event )
 	if ( "ended" == event.phase ) then
+		media.playEventSound( soundID )
 		if maxMoveNum > moveNum then
-			moveNum = moveNum + 1
-			if moveList[moveNum] ~= nil then
-				currMove = moveList[moveNum][1]
+			if moveColor == 1 then
+				moveColor = 2
 			else
-				currMove = ''
+				moveNum = moveNum + 1
+				moveColor = 1
 			end
-			moveColor = 1
-			UpdateMoveDisplay( currMove )
-			ChangeButtonColors()
-			ScrollToRow( moveNum )
+		elseif moveColor == 1 then
+			moveColor = 2
 		end
+		if moveList[moveNum] ~= nil and moveList[moveNum][moveColor] then
+			currMove = moveList[moveNum][moveColor]
+		else
+			currMove = ''
+		end
+		
+		UpdateMoveDisplay( currMove )
+		ChangeButtonColors()
+		ScrollToRow( moveNum )
 		--print( moveNum, moveColor, maxMoveNum )
 	end
 end
@@ -393,7 +434,7 @@ end
 --local move = { '','','<<','<','>','>>','','' }
 local letters = { 'a','b','c','d','e','f','g','h' }
 local pieces = { 'R','N','B','Q','K','B','N','R' }
-local special = { '0-0-0','x','#','+','0-0' }
+local special = { '0-0-0','!','?','+','x','#','=','0-0' }
 
 local buttonInfo = 
 {
@@ -499,19 +540,22 @@ for i=1,8 do
 	buttonInfo.left = (i-1) * butnWt
 	
 	-- Number Buttons
-	buttonInfo.top = baseY-butnHt
+	--buttonInfo.top = baseY-butnHt
+	buttonInfo.top = baseY - (3*butnHt)
 	buttonInfo.label = i
 	numberbuttons[i] = widget.newButton(buttonInfo)
 	editScreen:insert( numberbuttons[i] )
 
 	-- Letter Buttons
-	buttonInfo.top = baseY - (2*butnHt)
+	--buttonInfo.top = baseY - (2*butnHt)
+	buttonInfo.top = baseY-(2*butnHt)
 	buttonInfo.label = letters[i]
 	letterbuttons[i] = widget.newButton(buttonInfo)
 	editScreen:insert( letterbuttons[i] )
 	
 	-- Piece Buttons
-	buttonInfo.top = baseY - (3*butnHt)
+	--buttonInfo.top = baseY - (3*butnHt)
+	buttonInfo.top = baseY - butnHt
 	buttonInfo.label = pieces[i]
 	piecebuttons[#piecebuttons+1] = widget.newButton(buttonInfo)
 	editScreen:insert( piecebuttons[#piecebuttons] )
@@ -519,34 +563,46 @@ end
 
 local odd = true
 buttonInfo.left = 0
-buttonInfo.top = baseY - (4*butnHt)
-for i=1,7 do
+--buttonInfo.top = baseY - (4*butnHt)
+buttonInfo.top = baseY
+buttonInfo.defaultFile = "sqbuttond.png"
+buttonInfo.overFile = "sqbuttono.png"	
+buttonInfo.width = butnWt
+for i=1,8 do
 	-- Special Buttons
-	if odd then
-		buttonInfo.defaultFile = "rtbuttond.png"
-		buttonInfo.overFile = "rtbuttono.png"	
-		buttonInfo.width = butnWt*2
+--~ 	if odd then
+--~ 		buttonInfo.defaultFile = "rtbuttond.png"
+--~ 		buttonInfo.overFile = "rtbuttono.png"	
+--~ 		buttonInfo.width = butnWt*2
+--~ 	else
+--~ 		buttonInfo.defaultFile = "sqbuttond.png"
+--~ 		buttonInfo.overFile = "sqbuttono.png"	
+--~ 		buttonInfo.width = butnWt
+--~ 	end
+	if i == 1 or i == 8 then
+		buttonInfo.fontSize = 14
 	else
-		buttonInfo.defaultFile = "sqbuttond.png"
-		buttonInfo.overFile = "sqbuttono.png"	
-		buttonInfo.width = butnWt
+		buttonInfo.fontSize = 20
 	end
 	buttonInfo.label = special[i]
 	specialbuttons[#specialbuttons+1] = widget.newButton(buttonInfo)
 	editScreen:insert( specialbuttons[#specialbuttons] )
-	if odd then
-		buttonInfo.left = buttonInfo.left + butnWt*2
-	else
-		buttonInfo.left = buttonInfo.left + butnWt
-	end
+--~ 	if odd then
+--~ 		buttonInfo.left = buttonInfo.left + butnWt*2
+--~ 	else
+--~ 		buttonInfo.left = buttonInfo.left + butnWt
+--~ 	end
+	buttonInfo.left = buttonInfo.left + butnWt
 	odd = not odd
 end
+buttonInfo.fontSize = 20
 
 -- MoveButtons
 	buttonInfo.defaultFile = "sqbuttond.png"
 	buttonInfo.overFile = "sqbuttono.png"	
 	buttonInfo.width = butnWt
-	buttonInfo.top = baseY
+--	buttonInfo.top = baseY
+	buttonInfo.top = baseY - (4*butnHt)
 
 	buttonInfo.left = 2 * butnWt
 	buttonInfo.label = '<<'
@@ -628,6 +684,12 @@ x: Capture
 
 #: Checkmate
 
+?: Questionable Move
+
+!: Good Move
+
+=: Promotion of Pawn
+
 0-0-0: Queen side castling
 
 a-h: used to specify pawns
@@ -642,7 +704,6 @@ Enter: Enter the move into the move list
 <x: Backspace, clear the last entered key in the move currently being edited
 
 Save: Save the current state of the game and go back to the list of games
-
 
 ]]
 

@@ -14,6 +14,7 @@ settings =
 			"android.permission.ACCESS_NETWORK_STATE",
 			"android.permission.READ_PHONE_STATE",			
             "android.permission.WRITE_EXTERNAL_STORAGE",
+			"android.permission.VIBRATE",
         },
     },
     plugins =

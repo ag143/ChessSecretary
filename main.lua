@@ -1,5 +1,5 @@
 --Global Variables
-version = 1.13
+version = 1.15
 moveCheckVersion = 2.0
 isSimulator = "simulator" == system.getInfo("environment")
 isAndroid = "Android" == system.getInfo( "platformName" )
@@ -7,6 +7,7 @@ bannerEnd = 53
 appOriginY = display.screenOriginY + bannerEnd
 titleBarHeight = 32
 transitionTime = 500
+forceHelp = false
 
 moveList = {}
 gameInfo = 
@@ -84,28 +85,31 @@ function LoadGame( filename )
 		end
         io.close( file )
 	end
-	
 end
 
-local function WriteGameInfo( infoType, defaultInfo )
+local function GetGameInfo( infoType, defaultInfo )
 	if gameInfo[infoType] ~= nil then
-		file:write( '[' .. infoType .. ' "' .. gameInfo[infoType] .. '"]\n' )
+		return( '[' .. infoType .. ' "' .. gameInfo[infoType] .. '"]\n' )
 	else
-		file:write( '[' .. infoType .. ' "' .. defaultInfo .. '"]\n' )
+		return( '[' .. infoType .. ' "' .. defaultInfo .. '"]\n' )
 	end
+end
+
+local function GetSaveGameText()
+	local saveText = ''
+ 	for heading, info in pairs(gameInfo) do
+		--print( heading, info )
+		saveText = saveText .. GetGameInfo( heading, info )
+ 	end
+	saveText = saveText .. GetMoveListPGN()
+	return saveText
 end
 
 function SaveGame( filename )
 	local filePath = system.pathForFile( filename, system.DocumentsDirectory )
 	--print( filePath )
 	file = io.open( filePath, "w" )
-	--print( 'SAVE GAME' )
- 	for heading, info in pairs(gameInfo) do
-		--print( heading, info )
-		WriteGameInfo( heading, info )
- 	end
-	local moves = GetMoveListPGN()
-	file:write( moves )
+	file:write( GetSaveGameText() )
 	io.close( file )
 end
 
@@ -142,7 +146,8 @@ local state = 'selectgame'
 local lastState = state
 
 local function appState(event)
-	if help.AskedForHelp()  then 
+	if help.AskedForHelp() or forceHelp then 
+		forceHelp = false
 		lastState = state
 		state = 'help' 
 		local title

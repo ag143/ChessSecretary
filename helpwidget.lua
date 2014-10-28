@@ -155,6 +155,7 @@ helpWidget.ShowHelpButton = function( size )
 	bufferedSize = size+5	
 	-- Function to handle button events
 	local function handleButtonEvent( event )
+		system.vibrate()
 		if ( "ended" == event.phase ) then
 			if event.target:getLabel() == '?' then
 				helpWidget.asked4Help = true
