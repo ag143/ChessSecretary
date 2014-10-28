@@ -702,7 +702,7 @@ local function onEmailRelease( event )
 	{
 	   --to = { "sandeep.kharkar@gmail.com" },
 	   --cc = { "john.smith@somewhere.com", "jane.smith@somewhere.com" },
-	   subject = gamelist.selectedFile,
+	   subject = 'ChessNotes: ' .. itemSelected,
 	   isBodyHtml = false,
 	   --body = "<html><body>I scored over <b>9000</b>!!! Can you do better?</body></html>",
 	   body = GetSaveGameText(),
