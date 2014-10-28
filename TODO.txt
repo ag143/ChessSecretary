@@ -38,4 +38,4 @@
 - (1.14) Forced order of game info
 - (1.15) Feedback Button
 - (1.15) Credits Button
-
+- (1.16) Nicer formatting of Move List Display on Notate Screen

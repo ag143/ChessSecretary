@@ -43,7 +43,7 @@ editor.editDone = false
 
 local moveDisplay
 local moveListDisplay
-local LEFT_PADDING = 10
+local LEFT_PADDING = 5
 local ROW_HEIGHT = 20
 local MLD_Top = appOriginY + butnHt
 local MLDisplayHeight = display.actualContentHeight - butnHt*7 
@@ -60,33 +60,34 @@ local MLD_NumRows = MLDisplayHeight / (ROW_HEIGHT+2)
 local MLD_TopRow = 0
 
 local function FormatMove( num )
-	local currMoveStr = ''
+	local moveNumStr = ''
+	local whiteMoveStr = ''
+	local blackMoveStr = ''
 	
 	if num == moveNum then
-		currMoveStr = currMoveStr .. num .. '>'
+		moveNumStr = '.'..num
 	else
-		currMoveStr = currMoveStr .. num .. '.'
+		moveNumStr = num .. '.'
 	end
+	
 	if moveList[num] ~= nil then
 		--print( currMoveStr )
 		if moveList[num][1] ~= nil then
 			if num == moveNum and moveColor == 1 then
-				currMoveStr = currMoveStr .. ' (' .. moveList[num][1] .. ') '
+				whiteMoveStr = '(' .. moveList[num][1] .. ')'
 			else
-				currMoveStr = currMoveStr .. ' ' .. moveList[num][1]
+				whiteMoveStr = moveList[num][1]
 			end
-			--print( 'White ' .. currMoveStr )
-			if moveList[num][2] ~= nil then
-				if num == moveNum and moveColor == 2 then
-					currMoveStr = currMoveStr .. string.rep( ' ', 14-string.len(currMoveStr) ) .. '(' .. moveList[num][2] .. ') '
-				else
-					currMoveStr = currMoveStr .. string.rep( ' ', 14-string.len(currMoveStr) ) .. moveList[num][2]
-				end
-				--print( 'Black ' .. currMoveStr )
+		end
+		if moveList[num][2] ~= nil then
+			if num == moveNum and moveColor == 2 then
+				blackMoveStr = '(' .. moveList[num][2] .. ')'
+			else
+				blackMoveStr = moveList[num][2]
 			end
 		end
 	end
-	return currMoveStr
+	return moveNumStr, whiteMoveStr, blackMoveStr
 end
 
 local function ScrollToRow( num )
@@ -117,27 +118,59 @@ end
 local function onMoveListRowRender( event )
 	local phase = event.phase
 	local row = event.row
+	local groupContentHeight = row.contentHeight
+	
+	local moveNumStr = ''
+	local whiteMoveStr = ''
+	local blackMoveStr = ''
+	
+	moveNumStr, whiteMoveStr, blackMoveStr = FormatMove( row.index )
 	
 	-- in graphics 2.0, the group contentWidth / contentHeight are initially 0, and expand once elements are inserted into the group.
 	-- in order to use contentHeight properly, we cache the variable before inserting objects into the group
 
-	local groupContentHeight = row.contentHeight
+	local options = 
+	{
+		parent = row,
+		text = moveNumStr,
+		x = 3,
+		y = groupContentHeight * 0.5,
+		width = 20,
+		height = groupContentHeight,
+		font = native.systemFontBold, 
+		fontSize = 14, 
+		align = "right",
+	}
+	local rowNum = display.newText( options )
+	rowNum.anchorX = 0
 
-	--print(  FormatMove(row.index) )
-	local rowTitle = display.newText( row, FormatMove(row.index), 0, 0, native.systemFontBold, 16 )
-
-	-- in Graphics 2.0, the row.x is the center of the row, no longer the top left.
-	rowTitle.x = LEFT_PADDING
-
-	-- we also set the anchorX of the text to 0, so the object is x-anchored at the left
-	rowTitle.anchorX = 0
-
-	rowTitle.y = groupContentHeight * 0.5
-	rowTitle:setFillColor( 0, 0, 0 )
+	options.text = whiteMoveStr
+	options.x = 30
+	options.width = 60
+	options.fontSize = 16
+	options.align = 'left'
 	
-	--print( row.contentHeight )
-	--print( moveListDisplay:getContentPosition() )
-	--print( display.actualContentHeight/3 )
+	local whiteMove = display.newText( options )
+	whiteMove.anchorX = 0
+	
+	options.text = blackMoveStr
+	options.x = 95
+	options.width = 60
+	options.fontSize = 16
+	options.align = 'left'
+	
+	local blackMove = display.newText( options )
+	blackMove.anchorX = 0
+	
+	if row.index == moveNum then
+		rowNum:setFillColor( 0.1, 0.75, 0.1 )
+		whiteMove:setFillColor( 0.1, 0.75, 0.1 )
+		blackMove:setFillColor( 0.1, 0.75, 0.1 )
+	else
+		rowNum:setFillColor( 0, 0, 0 )
+		whiteMove:setFillColor( 0, 0, 0 )
+		blackMove:setFillColor( 0, 0, 0 )
+	end
 end
 
 --~ local function PrintTable( t, l, max )
