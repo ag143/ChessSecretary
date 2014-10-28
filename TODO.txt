@@ -39,3 +39,4 @@
 - (1.15) Feedback Button
 - (1.15) Credits Button
 - (1.16) Nicer formatting of Move List Display on Notate Screen
+- (1.16) Fixed crash bug in Email game code

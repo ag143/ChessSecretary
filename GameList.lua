@@ -362,7 +362,6 @@ function NewInfoButton( iX, index, iWidth, iHeight, infoText, headingText )
 		onRelease = onInfoButtonRelease
 	}
 	if gameInfoType[headingText] == nil then
-		print( headingText )
 		infoDisplayOption.fillColor = { default={ .95, .95, .95, 0.8 }, over={ 1, 1, 1, 0.4 } }
 	end
 	infoButton.infodisplay = widget.newButton( infoDisplayOption )
@@ -714,7 +713,7 @@ local function onEmailRelease( event )
 --	   },
 	}
 	local result = native.showPopup( "mail", options )
-	print( options.body )
+	--print( options.body )
 	if not result then
 		print( "Mail Not supported/setup on this device" )
 		native.showAlert( "Alert!",	"Mail not supported/setup on this device.", { "OK" })

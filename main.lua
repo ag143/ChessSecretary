@@ -95,7 +95,7 @@ local function GetGameInfo( infoType, defaultInfo )
 	end
 end
 
-local function GetSaveGameText()
+function GetSaveGameText()
 	local saveText = ''
  	for heading, info in pairs(gameInfo) do
 		--print( heading, info )
