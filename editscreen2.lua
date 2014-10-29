@@ -163,9 +163,14 @@ local function onMoveListRowRender( event )
 	blackMove.anchorX = 0
 	
 	if row.index == moveNum then
-		rowNum:setFillColor( 0.1, 0.75, 0.1 )
-		whiteMove:setFillColor( 0.1, 0.75, 0.1 )
-		blackMove:setFillColor( 0.1, 0.75, 0.1 )
+		rowNum:setFillColor( 0.0, 0.9, 0.0 )
+		if moveColor == 1 then
+			whiteMove:setFillColor( 0.0, 0.9, 0.0 )
+			blackMove:setFillColor( 0,0,0 )
+		else
+			whiteMove:setFillColor( 0,0,0 )
+			blackMove:setFillColor( 0.0, 0.9, 0.0 )
+		end
 	else
 		rowNum:setFillColor( 0, 0, 0 )
 		whiteMove:setFillColor( 0, 0, 0 )
