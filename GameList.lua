@@ -812,11 +812,13 @@ Corona Labs
 ]]
 
 local gamelisthelptext = [[
-This screen lists the current games that you have saved. Here, you can choose to add a new game or edit a current game. Scroll up and down by swiping up or down on your phone.
+This screen lists the current games that you have saved. Here, you can choose to add a new game or edit a current game. Scroll up and down by swiping up or down.
 
 To add a new game use the "New Game" button. Games are named automatically and sequentially and cannot be renamed at this time.
 
 To edit a game that you have saved touch the row on which the game is listed. This will take you to the Game Information screen.
+
+To send comments/crash info/compliments via email use the "Feedback" button.
 
 
 ]]
@@ -825,7 +827,7 @@ To edit a game that you have saved touch the row on which the game is listed. Th
 local gameinfohelptext = [[
 This screen shows you information about the selected game. 
 
-From this screen you can choose to edit the Move List of the game by selecting the "Edit" button.
+From this screen you can choose to edit the Move List of the game by selecting the "Notate" button.
 
 You can send a copy of the PGN file for this game using the "Email" button. You need an email account and a default email app to do this. Your phone also needs to have an active internet connection (wireless or cellular).
 
