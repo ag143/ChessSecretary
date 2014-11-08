@@ -867,6 +867,7 @@ gamelist.GetHelpInfo = function()
 	if mode == 'gamelist' then
 		return "Game List Help" , gamelisthelptext
 	elseif mode == 'credits' then
+		mode = 'gamelist'
 		return 'Credits', creditstext
 	end
 	

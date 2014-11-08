@@ -1,5 +1,5 @@
 --Global Variables
-version = 1.16
+version = 1.17
 moveCheckVersion = 2.0
 isSimulator = "simulator" == system.getInfo("environment")
 isAndroid = "Android" == system.getInfo( "platformName" )

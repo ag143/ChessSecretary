@@ -40,3 +40,4 @@
 - (1.15) Credits Button
 - (1.16) Nicer formatting of Move List Display on Notate Screen
 - (1.16) Fixed crash bug in Email game code
+- (1.17) Fixed 'Credits' mode gets stuck on once Credits are displayed
