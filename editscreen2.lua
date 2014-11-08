@@ -228,6 +228,10 @@ local function AddMove( fromFile )
 		if  ( version < moveCheckVersion and currMove ~= '' ) then
 		    --or moveCheck.CheckCurrMove( currMove, moveColor ) then
 			
+			if not fromFile then
+				media.playEventSound( soundID )
+			end
+			
 			if fromFile and moveColor == 1 then
 				moveListDisplay:insertRow(
 				{
@@ -397,7 +401,6 @@ end
 
 local function EnterMove( event )
 	if ( "ended" == event.phase ) then
-		media.playEventSound( soundID )
 		AddMove( false )
 	end
 end
@@ -424,7 +427,6 @@ end
 
 local function PrevMove( event )
 	if ( "ended" == event.phase ) then
-		media.playEventSound( soundID )
 		if moveNum > 1 then
 			if moveColor == 2 then
 				moveColor = 1
@@ -432,8 +434,10 @@ local function PrevMove( event )
 				moveNum = moveNum - 1
 				moveColor = 2
 			end
+			media.playEventSound( soundID )
 		elseif moveColor == 2 then
 			moveColor = 1
+			media.playEventSound( soundID )
 		end
 		currMove = moveList[moveNum][moveColor]
 		UpdateMoveDisplay( currMove )
@@ -445,7 +449,6 @@ end
 
 local function NextMove( event )
 	if ( "ended" == event.phase ) then
-		media.playEventSound( soundID )
 		if maxMoveNum > moveNum then
 			if moveColor == 1 then
 				moveColor = 2
@@ -453,15 +456,13 @@ local function NextMove( event )
 				moveNum = moveNum + 1
 				moveColor = 1
 			end
-		elseif moveColor == 1 then
-			moveColor = 2
+			media.playEventSound( soundID )
 		end
 		if moveList[moveNum] ~= nil and moveList[moveNum][moveColor] then
 			currMove = moveList[moveNum][moveColor]
 		else
 			currMove = ''
 		end
-		
 		UpdateMoveDisplay( currMove )
 		ChangeButtonColors()
 		ScrollToRow( moveNum )

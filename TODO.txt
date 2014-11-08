@@ -1,7 +1,6 @@
 + Make Date Fields be Date Fields in GameInfo screen
 + Enforce numeric range on ELO
 + Save Settings and use them in app
-+ Add a 'Feedback' button to send email to BWG
 
 
 - (1.01) Save when backing out of the Game Info Screen
@@ -41,3 +40,6 @@
 - (1.16) Nicer formatting of Move List Display on Notate Screen
 - (1.16) Fixed crash bug in Email game code
 - (1.17) Fixed 'Credits' mode gets stuck on once Credits are displayed
+- (1.17) Fixed crash bug when scrolling past unentered last White move.
+- (1.17) Only play keyboard click on Next and Prev move when they are valid
+- (1.17) Only play keyboard click on Enter move when there is valid move entered
