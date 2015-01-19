@@ -1,6 +1,9 @@
 local checker = {}
 
 checker.invalidMove = 0
+checker.capCol = ''
+checker.capRow = 0
+checker.capColIdx = 0
 checker.whitePawns = { 'a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g2', 'h2'}
 checker.whitePieces = 
 { 
@@ -26,17 +29,51 @@ checker.blackPieces =
 	Rh = 'h8',
 }
 checker.columns = { 'a','b','c','d','e','f','g','h' }
+checker.pieces = { 'Ra', 'Nb', 'Bc', 'Q', 'K', 'Bf', 'Ng', 'Rh' }
+
 checker.board = --Rows
 {
-	a = {	'w_Ra', 'w_a', ' ',' ',' ',' ', 'l_a', 'l_Ra' },
-	b = {	'w_Nb', 'w_b', ' ',' ',' ',' ', 'l_b', 'l_Nb' },
-	c = {	'w_Bc', 'w_c', ' ',' ',' ',' ', 'l_c', 'l_Bc' },
-	d = {	'w_Q',  'w_d', ' ',' ',' ',' ', 'l_d', 'l_Q' },
-	e = {	'w_K',  'w_e', ' ',' ',' ',' ', 'l_e', 'l_K' },
+	a = { 'w_Ra', 'w_a', ' ',' ',' ',' ', 'l_a', 'l_Ra' },
+	b = { 'w_Nb', 'w_b', ' ',' ',' ',' ', 'l_b', 'l_Nb' },
+	c = { 'w_Bc', 'w_c', ' ',' ',' ',' ', 'l_c', 'l_Bc' },
+	d = { 'w_Q',  'w_d', ' ',' ',' ',' ', 'l_d', 'l_Q' },
+	e = { 'w_K',  'w_e', ' ',' ',' ',' ', 'l_e', 'l_K' },
 	f = {	'w_Bf', 'w_f', ' ',' ',' ',' ', 'l_f', 'l_Bf' },
-	g = {	'w_Ng', 'w_g', ' ',' ',' ',' ', 'l_g', 'l_Ng' },
-	h = {	'w_Rh', 'w_h', ' ',' ',' ',' ', 'l_h', 'l_Rh' },
+	g = { 'w_Ng', 'w_g', ' ',' ',' ',' ', 'l_g', 'l_Ng' },
+	h = { 'w_Rh', 'w_h', ' ',' ',' ',' ', 'l_h', 'l_Rh' },
 }
+
+local function ValidateBoard()
+	-- White Pawns
+	local pawnArray = checker.whitePawns
+	for p=1,#pawnArray do
+		if pawnArray[p] ~= '' then
+			local col = pawnArray[p]:sub( 1, 1 )
+			local row = tonumber(pawnArray[p]:sub( 2 ))
+			local pawn = 'w_' .. checker.columns[p]
+			--print( row, col, pawn, checker.board[row][col] )
+			if checker.board[col][row] ~= pawn then
+				print( 'Bad White pawn on board for ' .. checker.columns[p] )
+				return false
+			end
+		end
+	end
+	
+	-- Black Pawns
+	pawnArray = checker.blackPawns
+	for p=1,#pawnArray do
+		if pawnArray[p] ~= '' then
+			local col = pawnArray[p]:sub( 1, 1 )
+			local row = tonumber(pawnArray[p]:sub( 2 ))
+			local pawn = 'l_' .. checker.columns[p]
+			--print( row, col, pawn, checker.board[row][col] )
+			if checker.board[col][row] ~= pawn then
+				print( 'Bad Black pawn on board for ' .. checker.columns[p] )
+				return false
+			end
+		end
+	end
+end
 
 local function PrintBoard()
 	edge =  ''
@@ -63,9 +100,65 @@ local function PrintBoard()
 	end
 end
 
+local function ValidateCaptureInfo( currMove, moveColor )
+	capSq = currMove:match( '.*x(.*)' )
+	checker.capCol = ''
+	checker.capRow = 0
+	checker.capColIdx = 0
+	if capSq ~= nil then
+		checker.capCol = capSq:sub( 1, 1 )
+		checker.capRow = tonumber( capSq:sub( 2, 2 ) )
+		for i=1,8 do
+			if capCol == checker.columns[i] then
+				checker.capColIdx = i
+				break
+			end
+		end
+		local oppColor = 'w_'
+		if moveColor == 1 then
+			oppColor = 'l_'
+		end
+		if checker.board[col][row]:find( oppColor ) == 1 then
+			return true, true 
+		else
+			return true, false 
+		end
+	end
+	return false
+end
+
+local function CheckPawnMove( currMove, moveColor )
+	return true
+end
+
+local function CheckKnightMove( currMove, moveColor )
+	return true
+end
+
+local function CheckBishopMove( currMove, moveColor )	
+	return true
+end
+
+local function CheckQueenMove( currMove, moveColor )
+	return true
+end
+
+local function CheckRookMove( currMove, moveColor )
+	return true
+end
+
+local function CheckCastleMove( currMove, moveColor )
+	return true
+end
+
+local function CheckKingMove( currMove, moveColor )
+	return true
+end
+
 local function MovePawnOnBoard( currMove, moveColor )
-	print( currMove )
+	--print( currMove )
 	newLoc = currMove:gsub( '+', '' )
+	--print( newLoc )
 	capCol = currMove:match( '.x' )
 	capColIdx = 0
 	if capCol ~= nil then
@@ -99,7 +192,7 @@ local function MovePawnOnBoard( currMove, moveColor )
 		curLoc = usingpawns[i]
 		curcol = curLoc:sub( 1, 1 )
 		currow = tonumber( curLoc:sub( 2, 2 ) )
-		print( curcol, currow, capCol, capColIdx, newcol, newrow )
+		--print( curcol, currow, capCol, capColIdx, newcol, newrow )
 		if capCol ~= nil then
 			if capCol == curcol then print( 'Same Col' ) end
 			if newrow == currow+pawnoffset then print( 'Good Row Offset' ) end
@@ -135,6 +228,24 @@ local function MovePawnOnBoard( currMove, moveColor )
 			end
 		end
 	end
+end
+
+local function MoveKnightOnBoard( currMove, moveColor )
+end
+
+local function MoveBishopOnBoard( currMove, moveColor )
+end
+
+local function MoveQueenOnBoard( currMove, moveColor )
+end
+
+local function MoveRookOnBoard( currMove, moveColor )
+end
+
+local function MoveCastleOnBoard( currMove, moveColor )
+end
+
+local function MoveKingOnBoard( currMove, moveColor )
 end
 
 -- Handler that gets notified when the alert closes
@@ -228,20 +339,65 @@ checker.GetValidButtonList = function( currMove, moveColor )
 end
 
 checker.CheckCurrMove = function( currMove, moveColor )
-	print( 'Checking Move' .. currMove )
+	print( 'Checking Move ' .. currMove )
 	if currMove == '' then
 		native.showAlert( "Error", "Invalid Move", { "OK", "Ignore", "Always Ignore" }, onInvalidMoveNotification )
 		if invalidMove == 0 then
 			return false
 		end
 	end
+	hasCap, isValid = ValidateCaptureInfo( currMove, moveColor )
+	if hasCap and not isValid then
+		return false
+	end
+	ValidateBoard()
 	PrintBoard()
 	-- pawn move?
 	if currMove:match( '^[abcdefgh]' ) ~= nil then
-		MovePawnOnBoard( currMove, moveColor )
+		print( 'Pawn Move' )
+		if CheckPawnMove( currMove, moveColor ) then
+			MovePawnOnBoard( currMove, moveColor )
+			return true
+		end
+	elseif currMove:match( '^N' ) ~= nil then
+		print( 'Knight Move' )
+		if CheckKnightMove( currMove, moveColor ) then
+			MoveKnightOnBoard( currMove, moveColor )
+			return true
+		end
+	elseif currMove:match( '^B' ) ~= nil then
+		print( 'Bishop Move' )
+		if CheckBishopMove( currMove, moveColor ) then
+			MoveBishopOnBoard( currMove, moveColor )
+			return true
+		end
+	elseif currMove:match( '^Q' ) ~= nil then
+		print( 'Queen Move' )
+		if CheckQueenMove( currMove, moveColor ) then
+			MoveQueenOnBoard( currMove, moveColor )
+			return true
+		end
+	elseif currMove:match( '^R' ) ~= nil then
+		print( 'Rook Move' )
+		if CheckRookMove( currMove, moveColor ) then
+			MoveRookOnBoard( currMove, moveColor )
+			return true
+		end
+	elseif currMove:match( '^0' ) ~= nil then
+		print( 'Castle Move' )
+		if CheckCastleMove( currMove, moveColor ) then
+			MoveCastleOnBoard( currMove, moveColor )
+			return true
+		end
+	elseif currMove:match( '^K' ) ~= nil then
+		print( 'King Move' )
+		if CheckKingMove( currMove, moveColor ) then
+			MoveKingOnBoard( currMove, moveColor )
+			return true
+		end
 	end
-	PrintBoard()
-	return true
+	--PrintBoard()
+	return false
 end
 
 return checker

@@ -1,8 +1,8 @@
 local widget = require( "widget" )
---local moveCheck = nil
---if version >= moveCheckVersion then
---		moveCheck = require( "movechecker" )
---end
+local moveCheck = nil
+if version >= moveCheckVersion then
+		moveCheck = require( "movechecker" )
+end
 
 
 
@@ -226,7 +226,7 @@ moveListDisplay = widget.newTableView
 
 local function AddMove( fromFile )
 		if  ( version < moveCheckVersion and currMove ~= '' ) then
-		    --or moveCheck.CheckCurrMove( currMove, moveColor ) then
+			--or moveCheck.CheckCurrMove( currMove, moveColor ) then
 			
 			if not fromFile then
 				media.playEventSound( soundID )
