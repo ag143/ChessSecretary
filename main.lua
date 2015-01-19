@@ -123,8 +123,11 @@ end
 --~ local ads = require "ads"
 --~ ads.init( "crossinstall", "QlCk", nil )
 
-local ads = require "ads"
-ads.init( 'admob', 'ca-app-pub-2270148772893486/6750641653' )
+local ads = nil
+if not isSimulator then
+	ads = require "ads"
+	ads.init( 'admob', 'ca-app-pub-2270148772893486/6750641653' )
+end
 
 -- Create a background to go behind our tableView
 local bkgndH = 500
