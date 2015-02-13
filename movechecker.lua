@@ -259,6 +259,87 @@ local function onInvalidMoveNotification( event )
 	end
 end
 
+local function GetValidButtonsForPawnMove( currMove, numbers, letters, pieces, specials )
+	if currMove:match( '^[abcdefgh]$' ) ~= nil or
+	   currMove:match( '^[abcdefgh]x[abcdefgh]$' ) ~= nil then
+		-- just column entered or column and capture column
+		print( 'Just Column' )
+		for i=1,8 do
+			-- enable numbers
+			numbers[i] = 1
+		end
+		-- enable 'x' for pawn capture if there is not already an 'x'
+		if currMove:find( 'x' ) == nil then
+			specials[5] = 1
+		end
+	elseif currMove:match( '^[abcdefgh]x$' ) ~= nil then
+		-- pawn capture move begun
+		for i=1,8 do
+			-- turn on the letter before and after capture colums letter
+			print( currMove, checker.columns[i] )
+			if currMove:match( '^'..checker.columns[i] ) then
+				
+				if i -1 > 0 then
+					letters[i-1] = 1
+				end
+				if i + 1 < 9 then
+					letters[i+1] = 1
+				end
+				break
+			end
+		end		
+	elseif currMove:match( '^[abcdefgh][1234567]$' ) ~= nil or
+		currMove:match( '^[abcdefgh]x[abcdefgh][12345678]$' ) ~= nil then
+		-- pawn move complete, promotion if reached 1 or 8
+		if currMove:match( '[18]' ) then
+			specials[7] = 1
+		else
+			-- allow check, checkmate
+			specials[4] = 1
+			specials[6] = 1
+		end
+	elseif currMove:find( '=' ) ~= nil then
+		if currMove:match( '[RNBQ]' ) == nil then
+			for i=1,8 do
+				-- allow promotion to piece
+				pieces[i] = 1
+			end
+			-- can't promote to King!!
+			pieces[5] = 0.5
+		elseif currMove:match( '[+#]' ) == nil then
+			-- Allow check or checkmate after promotion if not already entered
+			specials[4] = 1
+			specials[6] = 1
+		end
+	end
+end
+
+local function GetValidButtonsForQueenOrBishopMove( currMove, numbers, letters, pieces, specials )
+	if currMove:match( '^[QB]$' ) ~= nil or 
+	   currMove:match( '^[QB]x$' ) then
+		for i=1,8 do
+			-- enable letters
+			letters[i] = 1
+		end
+		-- enable 'x' for capture if there is not already an 'x'
+		if currMove:find( 'x' ) == nil then
+			specials[5] = 1
+		end
+	elseif currMove:match( '^[QB][abcdefgh]$' ) ~= nil or 
+	        currMove:match( '^[QB]x[abcdefgh]$' ) then
+		for i=1,8 do
+			-- enable numbers
+			numbers[i] = 1
+		end
+	elseif ( currMove:match( '^[QB][abcdefgh][12345678]$' ) ~= nil or 
+	          currMove:match( '^[QB]x[abcdefgh][12345678]$' ) ) and
+		    currMove:match( '[+#]' ) == nil then
+			-- Allow check or checkmate if not already entered
+		specials[4] = 1
+		specials[6] = 1
+	end
+end
+
 checker.GetValidButtonList = function( currMove, moveColor )
 	local numbers = {}
 	local letters = {}
@@ -288,120 +369,16 @@ checker.GetValidButtonList = function( currMove, moveColor )
 	elseif currMove:match( '^[abcdefgh]' ) ~= nil then
 		--pawn move 
 		print( 'Pawn Move: ' .. currMove )	
-		if currMove:match( '^[abcdefgh]$' ) ~= nil or
-	       currMove:match( '^[abcdefgh]x[abcdefgh]$' ) ~= nil then
-			-- just column entered or column and capture column
-			print( 'Just Column' )
-			for i=1,8 do
-				-- enable numbers
-				numbers[i] = 1
-			end
-			-- enable 'x' for pawn capture if there is not already an 'x'
-			if currMove:find( 'x' ) == nil then
-				specials[5] = 1
-			end
-		elseif currMove:match( '^[abcdefgh]x$' ) ~= nil then
-			-- pawn capture move begun
-			for i=1,8 do
-				-- turn on the letter before and after capture colums letter
-				print( currMove, checker.columns[i] )
-				if currMove:match( '^'..checker.columns[i] ) then
-					
-					if i -1 > 0 then
-						letters[i-1] = 1
-					end
-					if i + 1 < 9 then
-						letters[i+1] = 1
-					end
-					break
-				end
-			end		
-		elseif currMove:match( '^[abcdefgh][1234567]$' ) ~= nil or
-			currMove:match( '^[abcdefgh]x[abcdefgh][12345678]$' ) ~= nil then
-			-- pawn move complete, promotion if reached 1 or 8
-			if currMove:match( '[18]' ) then
-				specials[7] = 1
-			else
-				-- allow check, checkmate
-				specials[4] = 1
-				specials[6] = 1
-			end
-		elseif currMove:find( '=' ) ~= nil then
-			if currMove:match( '[RNBQ]' ) == nil then
-				for i=1,8 do
-					-- allow promotion to piece
-					pieces[i] = 1
-				end
-				-- can't promote to King!!
-				pieces[5] = 0.5
-			elseif currMove:match( '[+#]' ) == nil then
-				-- Allow check or checkmate after promotion if not already entered
-				specials[4] = 1
-				specials[6] = 1
-			end
-		end
+		GetValidButtonsForPawnMove( currMove, numbers, letters, pieces, specials )
 			
-		-- can't move pieces
---~ 		pieces[1] = 0.5
---~ 		pieces[2] = 0.5
---~ 		pieces[5] = 0.5
---~ 		pieces[6] = 0.5
---~ 		-- can't move king stuff
---~ 		kings[1] = 0.5
---~ 		kings[2] = 0.5
---~ 		kings[3] = 0.5
---~ 		print( currMove )
---~ 		if string.len(currMove) == 1 then
---~ 			--just selected the file
---~ 			print( 'Just File' )
---~ 			-- all rows and files are invalid
---~ 			for i=1,8 do
---~ 				letters[i] = 0.5
---~ 				numbers[i] = 0.5
---~ 			end
---~ 			-- check and capture are possible
---~ 			pieces[3] = 1
---~ 			pieces[4] = 1
---~ 			--find where any pawn on the file can go
---~ 			if moveColor == 1 then
---~ 				--white pawn
---~ 				for i=1,#checker.whitePawns do
---~ 					--print( checker.whitePawns[i], currMove )
---~ 					--print( checker.whitePawns[i]:find(currMove) )
---~ 					if checker.whitePawns[i]:find(currMove) == 1 then
---~ 						row = tonumber( string.sub( checker.whitePawns[i], 2, 2 ) )
---~ 						--print( row )
---~ 						if row == 2 then
---~ 							numbers[4] = 1
---~ 							print( '4' )
---~ 						end
---~ 						numbers[row+1] = 1
---~ 						--print( row + 1 )
---~ 					end
---~ 				end
---~ 			else
---~ 				--black pawn
---~ 				for i=1,#checker.blackPawns do
---~ 					if checker.blackPawns[i]:find(currMove) == 1 then
---~ 						row = tonumber( string.sub( checker.blackPawns[i], 2, 2 )  )
---~ 						if row == 7 then
---~ 							numbers[5] = 1
---~ 							--print( '5' )
---~ 						end
---~ 						numbers[row - 1] = 1
---~ 						--print( i - 1 )
---~ 					end
---~ 				end
---~ 			end
---~ 		else
---~ 			
---~ 		end
 	elseif currMove:match( '^Q' ) ~= nil then
-		print( 'Queen Move' )
+		print( 'Queen Move: ' .. currMove )
+		GetValidButtonsForQueenOrBishopMove( currMove, numbers, letters, pieces, specials )
 	elseif currMove:match( '^R' ) ~= nil then
 		print( 'Rook Move' )
 	elseif currMove:match( '^B' ) ~= nil then
-		print( 'Bishop Move' )
+		print( 'Bishop Move: ' .. currMove )
+		GetValidButtonsForQueenOrBishopMove( currMove, numbers, letters, pieces, specials )
 	elseif currMove:match( '^N' ) ~= nil then
 		print( 'Knight Move' )
 	elseif currMove:match( '^K' ) ~= nil then
@@ -481,3 +458,61 @@ checker.CheckCurrMove = function( currMove, moveColor )
 end
 
 return checker
+
+
+
+		-- can't move pieces
+--~ 		pieces[1] = 0.5
+--~ 		pieces[2] = 0.5
+--~ 		pieces[5] = 0.5
+--~ 		pieces[6] = 0.5
+--~ 		-- can't move king stuff
+--~ 		kings[1] = 0.5
+--~ 		kings[2] = 0.5
+--~ 		kings[3] = 0.5
+--~ 		print( currMove )
+--~ 		if string.len(currMove) == 1 then
+--~ 			--just selected the file
+--~ 			print( 'Just File' )
+--~ 			-- all rows and files are invalid
+--~ 			for i=1,8 do
+--~ 				letters[i] = 0.5
+--~ 				numbers[i] = 0.5
+--~ 			end
+--~ 			-- check and capture are possible
+--~ 			pieces[3] = 1
+--~ 			pieces[4] = 1
+--~ 			--find where any pawn on the file can go
+--~ 			if moveColor == 1 then
+--~ 				--white pawn
+--~ 				for i=1,#checker.whitePawns do
+--~ 					--print( checker.whitePawns[i], currMove )
+--~ 					--print( checker.whitePawns[i]:find(currMove) )
+--~ 					if checker.whitePawns[i]:find(currMove) == 1 then
+--~ 						row = tonumber( string.sub( checker.whitePawns[i], 2, 2 ) )
+--~ 						--print( row )
+--~ 						if row == 2 then
+--~ 							numbers[4] = 1
+--~ 							print( '4' )
+--~ 						end
+--~ 						numbers[row+1] = 1
+--~ 						--print( row + 1 )
+--~ 					end
+--~ 				end
+--~ 			else
+--~ 				--black pawn
+--~ 				for i=1,#checker.blackPawns do
+--~ 					if checker.blackPawns[i]:find(currMove) == 1 then
+--~ 						row = tonumber( string.sub( checker.blackPawns[i], 2, 2 )  )
+--~ 						if row == 7 then
+--~ 							numbers[5] = 1
+--~ 							--print( '5' )
+--~ 						end
+--~ 						numbers[row - 1] = 1
+--~ 						--print( i - 1 )
+--~ 					end
+--~ 				end
+--~ 			end
+--~ 		else
+--~ 			
+--~ 		end
