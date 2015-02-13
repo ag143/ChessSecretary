@@ -314,9 +314,9 @@ local function GetValidButtonsForPawnMove( currMove, numbers, letters, pieces, s
 	end
 end
 
-local function GetValidButtonsForQueenOrBishopMove( currMove, numbers, letters, pieces, specials )
-	if currMove:match( '^[QB]$' ) ~= nil or 
-	   currMove:match( '^[QB]x$' ) then
+local function GetValidButtonsForKingQueenOrBishopMove( currMove, numbers, letters, pieces, specials )
+	if currMove:match( '^[KQB]$' ) ~= nil or 
+	   currMove:match( '^[KQB]x$' ) then
 		for i=1,8 do
 			-- enable letters
 			letters[i] = 1
@@ -325,16 +325,65 @@ local function GetValidButtonsForQueenOrBishopMove( currMove, numbers, letters, 
 		if currMove:find( 'x' ) == nil then
 			specials[5] = 1
 		end
-	elseif currMove:match( '^[QB][abcdefgh]$' ) ~= nil or 
-	        currMove:match( '^[QB]x[abcdefgh]$' ) then
+	elseif currMove:match( '^[KQB][abcdefgh]$' ) ~= nil or 
+	        currMove:match( '^[KQB]x[abcdefgh]$' ) then
 		for i=1,8 do
 			-- enable numbers
 			numbers[i] = 1
 		end
-	elseif ( currMove:match( '^[QB][abcdefgh][12345678]$' ) ~= nil or 
-	          currMove:match( '^[QB]x[abcdefgh][12345678]$' ) ) and
-		    currMove:match( '[+#]' ) == nil then
-			-- Allow check or checkmate if not already entered
+	elseif ( currMove:match( '^[KQB][abcdefgh][12345678]$' ) ~= nil or 
+	          currMove:match( '^[KQB]x[abcdefgh][12345678]$' ) ) and
+		    currMove:match( '[+#]' ) == nil and 
+			currMove:find( 'K' ) == nil then
+		-- Allow check or checkmate if not already entered and not King Move
+		specials[4] = 1
+		specials[6] = 1
+	end
+end
+
+local function GetValidButtonsForKnightOrRookMove( currMove, numbers, letters, pieces, specials )
+	if currMove:match( '^[NR]$' ) ~= nil then -- letters or numbers or x
+		for i=1,8 do
+			-- enable letters
+			letters[i] = 1
+			-- enable numbers
+			numbers[i] = 1
+		end
+		specials[5 ] = 1
+	elseif currMove:match( '^[NR][abcdefgh]$' ) ~= nil then -- numbers or x
+		for i=1,8 do
+			-- enable numbers
+			numbers[i] = 1
+		end
+		specials[5 ] = 1			
+	elseif currMove:match( '^[NR][12345678]$' ) ~= nil then -- letters or x
+		for i=1,8 do
+			-- enable letters
+			letters[i] = 1
+		end
+		specials[5 ] = 1			
+	elseif currMove:match( '^[NR][abcdefgh]x$' ) ~= nil or --letters
+	        currMove:match( '^[NR][12345678]x$' ) ~= nil or -- letters
+		    currMove:match( '^[NR]x$' ) then -- letters
+		for i=1,8 do
+			-- enable letters
+			letters[i] = 1
+		end
+	elseif currMove:match( '^[NR][abcdefgh]x[abcdefgh]$' ) ~= nil or --numbers
+		    currMove:match( '^[NR][12345678]x[abcdefgh]$' ) ~= nil or -- numbers
+			currMove:match( '^[NR][12345678][abcdefgh]$' ) ~= nil or -- numbers
+			currMove:match( '^[NR]x[abcdefgh]$' ) ~= nil then -- numbers
+		for i=1,8 do
+			-- enable numbers
+			numbers[i] = 1
+		end
+	elseif currMove:match( '^[NR][abcdefgh][12345678]$' ) ~= nil or -- specials
+			currMove:match( '^[NR]x[abcdefgh][12345678]$' ) ~= nil or -- specials
+		    currMove:match( '^[NR][abcdefgh]x[abcdefgh][12345678]$' ) ~= nil or --specials
+			currMove:match( '^[NR][12345678][abcdefgh][12345678]$' ) ~= nil or -- specials
+			currMove:match( '^[NR][12345678]x[abcdefgh][12345678]$' ) ~= nil and -- specials
+			currMove:match( '[#+]' ) == nil then
+		-- Allow check or checkmate if not already entered and not King Move
 		specials[4] = 1
 		specials[6] = 1
 	end
@@ -373,24 +422,21 @@ checker.GetValidButtonList = function( currMove, moveColor )
 			
 	elseif currMove:match( '^Q' ) ~= nil then
 		print( 'Queen Move: ' .. currMove )
-		GetValidButtonsForQueenOrBishopMove( currMove, numbers, letters, pieces, specials )
+		GetValidButtonsForKingQueenOrBishopMove( currMove, numbers, letters, pieces, specials )
 	elseif currMove:match( '^R' ) ~= nil then
-		print( 'Rook Move' )
+		print( 'Rook Move: ' .. currMove )
+		GetValidButtonsForKnightOrRookMove( currMove, numbers, letters, pieces, specials )
 	elseif currMove:match( '^B' ) ~= nil then
 		print( 'Bishop Move: ' .. currMove )
-		GetValidButtonsForQueenOrBishopMove( currMove, numbers, letters, pieces, specials )
+		GetValidButtonsForKingQueenOrBishopMove( currMove, numbers, letters, pieces, specials )
 	elseif currMove:match( '^N' ) ~= nil then
-		print( 'Knight Move' )
+		print( 'Knight Move: ' .. currMove )
+		GetValidButtonsForKnightOrRookMove( currMove, numbers, letters, pieces, specials )
 	elseif currMove:match( '^K' ) ~= nil then
-		print( 'King Move' )
+		print( 'King Move: ' .. currMove )
+		GetValidButtonsForKingQueenOrBishopMove( currMove, numbers, letters, pieces, specials )
 	elseif currMove:match( '^0' ) ~= nil then
 		print( 'Castling Move' )
-		for i=1,8 do
-			numbers[i] = 0.5
-			letters[i] = 0.5
-			pieces[i] = 0.5
-			specials[i] = 0.5
-		end
 	end
 	return numbers, letters, pieces, specials
 end
