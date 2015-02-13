@@ -263,79 +263,159 @@ checker.GetValidButtonList = function( currMove, moveColor )
 	local numbers = {}
 	local letters = {}
 	local pieces = {}
-	local kings = {}
+	local specials = {}
 
+	-- Turn everything off
 	for i=1,8 do
-		numbers[i] = 1
-		letters[i] = 1
-		if i < 7 then
+		numbers[i] = 0.5
+		letters[i] = 0.5
+		pieces[i] = 0.5
+		specials[i] = 0.5
+	end
+
+	if currMove == '' then
+		-- blank move
+		for i=1,8 do
+			-- enable letters (pawn move)
+			letters[i] = 1
+			-- enable pieces (piece move)
 			pieces[i] = 1
-			if i < 4 then
-				kings[i] = 1
+			-- enable specials (castling move)
+			if i == 1 or i == 8 then
+				specials[i] = 1
 			end
 		end
-	end
-	
-	--pawn move?
-	if currMove:match( '^[abcdefgh]' ) ~= nil then
-		print( 'Pawn Move' )
-		-- can't move pieces
-		pieces[1] = 0.5
-		pieces[2] = 0.5
-		pieces[5] = 0.5
-		pieces[6] = 0.5
-		-- can't move king stuff
-		kings[1] = 0.5
-		kings[2] = 0.5
-		kings[3] = 0.5
-		print( currMove )
-		if string.len(currMove) == 1 then
-			--just selected the file
-			print( 'Just File' )
-			-- all rows and files are invalid
+	elseif currMove:match( '^[abcdefgh]' ) ~= nil then
+		--pawn move 
+		print( 'Pawn Move: ' .. currMove )	
+		if currMove:match( '^[abcdefgh]$' ) ~= nil or
+	       currMove:match( '^[abcdefgh]x[abcdefgh]$' ) ~= nil then
+			-- just column entered or column and capture column
+			print( 'Just Column' )
 			for i=1,8 do
-				letters[i] = 0.5
-				numbers[i] = 0.5
+				-- enable numbers
+				numbers[i] = 1
 			end
-			-- check and capture are possible
-			pieces[3] = 1
-			pieces[4] = 1
-			--find where any pawn on the file can go
-			if moveColor == 1 then
-				--white pawn
-				for i=1,#checker.whitePawns do
-					--print( checker.whitePawns[i], currMove )
-					--print( checker.whitePawns[i]:find(currMove) )
-					if checker.whitePawns[i]:find(currMove) == 1 then
-						row = tonumber( string.sub( checker.whitePawns[i], 2, 2 ) )
-						--print( row )
-						if row == 2 then
-							numbers[4] = 1
-							print( '4' )
-						end
-						numbers[row+1] = 1
-						--print( row + 1 )
+			-- enable 'x' for pawn capture if there is not already an 'x'
+			if currMove:find( 'x' ) == nil then
+				specials[5] = 1
+			end
+		elseif currMove:match( '^[abcdefgh]x$' ) ~= nil then
+			-- pawn capture move begun
+			for i=1,8 do
+				-- turn on the letter before and after capture colums letter
+				print( currMove, checker.columns[i] )
+				if currMove:match( '^'..checker.columns[i] ) then
+					
+					if i -1 > 0 then
+						letters[i-1] = 1
 					end
+					if i + 1 < 9 then
+						letters[i+1] = 1
+					end
+					break
 				end
+			end		
+		elseif currMove:match( '^[abcdefgh][1234567]$' ) ~= nil or
+			currMove:match( '^[abcdefgh]x[abcdefgh][12345678]$' ) ~= nil then
+			-- pawn move complete, promotion if reached 1 or 8
+			if currMove:match( '[18]' ) then
+				specials[7] = 1
 			else
-				--black pawn
-				for i=1,#checker.blackPawns do
-					if checker.blackPawns[i]:find(currMove) == 1 then
-						row = tonumber( string.sub( checker.blackPawns[i], 2, 2 )  )
-						if row == 7 then
-							numbers[5] = 1
-							--print( '5' )
-						end
-						numbers[row - 1] = 1
-						--print( i - 1 )
-					end
-				end
+				-- allow check, checkmate
+				specials[4] = 1
+				specials[6] = 1
 			end
-		else
+		elseif currMove:find( '=' ) ~= nil then
+			if currMove:match( '[RNBQ]' ) == nil then
+				for i=1,8 do
+					-- allow promotion to piece
+					pieces[i] = 1
+				end
+				-- can't promote to King!!
+				pieces[5] = 0.5
+			elseif currMove:match( '[+#]' ) == nil then
+				-- Allow check or checkmate after promotion if not already entered
+				specials[4] = 1
+				specials[6] = 1
+			end
+		end
 			
+		-- can't move pieces
+--~ 		pieces[1] = 0.5
+--~ 		pieces[2] = 0.5
+--~ 		pieces[5] = 0.5
+--~ 		pieces[6] = 0.5
+--~ 		-- can't move king stuff
+--~ 		kings[1] = 0.5
+--~ 		kings[2] = 0.5
+--~ 		kings[3] = 0.5
+--~ 		print( currMove )
+--~ 		if string.len(currMove) == 1 then
+--~ 			--just selected the file
+--~ 			print( 'Just File' )
+--~ 			-- all rows and files are invalid
+--~ 			for i=1,8 do
+--~ 				letters[i] = 0.5
+--~ 				numbers[i] = 0.5
+--~ 			end
+--~ 			-- check and capture are possible
+--~ 			pieces[3] = 1
+--~ 			pieces[4] = 1
+--~ 			--find where any pawn on the file can go
+--~ 			if moveColor == 1 then
+--~ 				--white pawn
+--~ 				for i=1,#checker.whitePawns do
+--~ 					--print( checker.whitePawns[i], currMove )
+--~ 					--print( checker.whitePawns[i]:find(currMove) )
+--~ 					if checker.whitePawns[i]:find(currMove) == 1 then
+--~ 						row = tonumber( string.sub( checker.whitePawns[i], 2, 2 ) )
+--~ 						--print( row )
+--~ 						if row == 2 then
+--~ 							numbers[4] = 1
+--~ 							print( '4' )
+--~ 						end
+--~ 						numbers[row+1] = 1
+--~ 						--print( row + 1 )
+--~ 					end
+--~ 				end
+--~ 			else
+--~ 				--black pawn
+--~ 				for i=1,#checker.blackPawns do
+--~ 					if checker.blackPawns[i]:find(currMove) == 1 then
+--~ 						row = tonumber( string.sub( checker.blackPawns[i], 2, 2 )  )
+--~ 						if row == 7 then
+--~ 							numbers[5] = 1
+--~ 							--print( '5' )
+--~ 						end
+--~ 						numbers[row - 1] = 1
+--~ 						--print( i - 1 )
+--~ 					end
+--~ 				end
+--~ 			end
+--~ 		else
+--~ 			
+--~ 		end
+	elseif currMove:match( '^Q' ) ~= nil then
+		print( 'Queen Move' )
+	elseif currMove:match( '^R' ) ~= nil then
+		print( 'Rook Move' )
+	elseif currMove:match( '^B' ) ~= nil then
+		print( 'Bishop Move' )
+	elseif currMove:match( '^N' ) ~= nil then
+		print( 'Knight Move' )
+	elseif currMove:match( '^K' ) ~= nil then
+		print( 'King Move' )
+	elseif currMove:match( '^0' ) ~= nil then
+		print( 'Castling Move' )
+		for i=1,8 do
+			numbers[i] = 0.5
+			letters[i] = 0.5
+			pieces[i] = 0.5
+			specials[i] = 0.5
 		end
 	end
-	return numbers, letters, pieces, kings
+	return numbers, letters, pieces, specials
 end
 
 checker.CheckCurrMove = function( currMove, moveColor )

@@ -1,6 +1,6 @@
 local widget = require( "widget" )
 local moveCheck = nil
-if version >= moveCheckVersion then
+if version >= moveCheckVersion or version >= smartKBVersion then
 		moveCheck = require( "movechecker" )
 end
 
@@ -692,9 +692,9 @@ function UpdateMoveDisplay()
 	--moveDisplay.align = 'center'
 	moveDisplay.anchorX = 0
 	--moveDisplay.anchorY = 0
---	if version >= moveCheckVersion then
---		EnableButtons( moveCheck.GetValidButtonList( currMove, moveColor ) )
---	end
+	if version >= smartKBVersion then
+		EnableButtons( moveCheck.GetValidButtonList( currMove, moveColor ) )
+	end
 end
 
 local gameedithelptext = [[

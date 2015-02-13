@@ -1,6 +1,7 @@
 --Global Variables
-version = 1.17
+version = 1.20
 moveCheckVersion = 2.0
+smartKBVersion = 1.20
 isSimulator = "simulator" == system.getInfo("environment")
 isAndroid = "Android" == system.getInfo( "platformName" )
 bannerEnd = 53
