@@ -53,7 +53,7 @@ local function ValidateBoard()
 			local pawn = 'w_' .. checker.columns[p]
 			--print( row, col, pawn, checker.board[row][col] )
 			if checker.board[col][row] ~= pawn then
-				print( 'Bad White pawn on board for ' .. checker.columns[p] )
+				--print( 'Bad White pawn on board for ' .. checker.columns[p] )
 				return false
 			end
 		end
@@ -68,7 +68,7 @@ local function ValidateBoard()
 			local pawn = 'l_' .. checker.columns[p]
 			--print( row, col, pawn, checker.board[row][col] )
 			if checker.board[col][row] ~= pawn then
-				print( 'Bad Black pawn on board for ' .. checker.columns[p] )
+				--print( 'Bad Black pawn on board for ' .. checker.columns[p] )
 				return false
 			end
 		end
@@ -263,7 +263,7 @@ local function GetValidButtonsForPawnMove( currMove, numbers, letters, pieces, s
 	if currMove:match( '^[abcdefgh]$' ) ~= nil or
 	   currMove:match( '^[abcdefgh]x[abcdefgh]$' ) ~= nil then
 		-- just column entered or column and capture column
-		print( 'Just Column' )
+		--print( 'Just Column' )
 		for i=1,8 do
 			-- enable numbers
 			numbers[i] = 1
@@ -276,7 +276,7 @@ local function GetValidButtonsForPawnMove( currMove, numbers, letters, pieces, s
 		-- pawn capture move begun
 		for i=1,8 do
 			-- turn on the letter before and after capture colums letter
-			print( currMove, checker.columns[i] )
+			--print( currMove, checker.columns[i] )
 			if currMove:match( '^'..checker.columns[i] ) then
 				
 				if i -1 > 0 then
@@ -417,32 +417,32 @@ checker.GetValidButtonList = function( currMove, moveColor )
 		end
 	elseif currMove:match( '^[abcdefgh]' ) ~= nil then
 		--pawn move 
-		print( 'Pawn Move: ' .. currMove )	
+		--print( 'Pawn Move: ' .. currMove )	
 		GetValidButtonsForPawnMove( currMove, numbers, letters, pieces, specials )
 			
 	elseif currMove:match( '^Q' ) ~= nil then
-		print( 'Queen Move: ' .. currMove )
+		--print( 'Queen Move: ' .. currMove )
 		GetValidButtonsForKingQueenOrBishopMove( currMove, numbers, letters, pieces, specials )
 	elseif currMove:match( '^R' ) ~= nil then
-		print( 'Rook Move: ' .. currMove )
+		--print( 'Rook Move: ' .. currMove )
 		GetValidButtonsForKnightOrRookMove( currMove, numbers, letters, pieces, specials )
 	elseif currMove:match( '^B' ) ~= nil then
-		print( 'Bishop Move: ' .. currMove )
+		--print( 'Bishop Move: ' .. currMove )
 		GetValidButtonsForKingQueenOrBishopMove( currMove, numbers, letters, pieces, specials )
 	elseif currMove:match( '^N' ) ~= nil then
-		print( 'Knight Move: ' .. currMove )
+		--print( 'Knight Move: ' .. currMove )
 		GetValidButtonsForKnightOrRookMove( currMove, numbers, letters, pieces, specials )
 	elseif currMove:match( '^K' ) ~= nil then
-		print( 'King Move: ' .. currMove )
+		--print( 'King Move: ' .. currMove )
 		GetValidButtonsForKingQueenOrBishopMove( currMove, numbers, letters, pieces, specials )
 	elseif currMove:match( '^0' ) ~= nil then
-		print( 'Castling Move' )
+		--print( 'Castling Move' )
 	end
 	return numbers, letters, pieces, specials
 end
 
 checker.CheckCurrMove = function( currMove, moveColor )
-	print( 'Checking Move ' .. currMove )
+	--print( 'Checking Move ' .. currMove )
 	if currMove == '' then
 		native.showAlert( "Error", "Invalid Move", { "OK", "Ignore", "Always Ignore" }, onInvalidMoveNotification )
 		if invalidMove == 0 then
