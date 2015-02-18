@@ -7,7 +7,7 @@ settings =
     },
     android =
     {
-        versionCode = "10",
+--     versionCode = "12",
         usesPermissions =
         {
             "android.permission.INTERNET",
