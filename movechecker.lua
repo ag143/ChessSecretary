@@ -342,20 +342,15 @@ local function GetValidButtonsForKingQueenOrBishopMove( currMove, numbers, lette
 end
 
 local function GetValidButtonsForKnightOrRookMove( currMove, numbers, letters, pieces, specials )
-	if currMove:match( '^[NR]$' ) ~= nil then -- letters or numbers or x
+	if currMove:match( '^[NR]$' ) ~= nil or
+	   currMove:match( '^[NR][abcdefgh]$' ) ~= nil then -- letters or numbers or x
 		for i=1,8 do
 			-- enable letters
 			letters[i] = 1
 			-- enable numbers
 			numbers[i] = 1
 		end
-		specials[5 ] = 1
-	elseif currMove:match( '^[NR][abcdefgh]$' ) ~= nil then -- numbers or x
-		for i=1,8 do
-			-- enable numbers
-			numbers[i] = 1
-		end
-		specials[5 ] = 1			
+		specials[5] = 1
 	elseif currMove:match( '^[NR][12345678]$' ) ~= nil then -- letters or x
 		for i=1,8 do
 			-- enable letters
@@ -372,6 +367,7 @@ local function GetValidButtonsForKnightOrRookMove( currMove, numbers, letters, p
 	elseif currMove:match( '^[NR][abcdefgh]x[abcdefgh]$' ) ~= nil or --numbers
 		    currMove:match( '^[NR][12345678]x[abcdefgh]$' ) ~= nil or -- numbers
 			currMove:match( '^[NR][12345678][abcdefgh]$' ) ~= nil or -- numbers
+			currMove:match( '^[NR][abcdefgh][abcdefgh]$' ) ~= nil or -- numbers
 			currMove:match( '^[NR]x[abcdefgh]$' ) ~= nil then -- numbers
 		for i=1,8 do
 			-- enable numbers
@@ -381,7 +377,8 @@ local function GetValidButtonsForKnightOrRookMove( currMove, numbers, letters, p
 			currMove:match( '^[NR]x[abcdefgh][12345678]$' ) ~= nil or -- specials
 		    currMove:match( '^[NR][abcdefgh]x[abcdefgh][12345678]$' ) ~= nil or --specials
 			currMove:match( '^[NR][12345678][abcdefgh][12345678]$' ) ~= nil or -- specials
-			currMove:match( '^[NR][12345678]x[abcdefgh][12345678]$' ) ~= nil and -- specials
+			currMove:match( '^[NR][12345678]x[abcdefgh][12345678]$' ) ~= nil or -- specials
+			currMove:match( '^[NR][abcdefgh][abcdefgh][12345678]$' ) ~= nil and -- specials
 			currMove:match( '[#+]' ) == nil then
 		-- Allow check or checkmate if not already entered and not King Move
 		specials[4] = 1
