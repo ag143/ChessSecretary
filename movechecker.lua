@@ -432,7 +432,7 @@ checker.GetValidButtonList = function( currMove, moveColor )
 	elseif currMove:match( '^K' ) ~= nil then
 		--print( 'King Move: ' .. currMove )
 		GetValidButtonsForKingQueenOrBishopMove( currMove, numbers, letters, pieces, specials )
-	elseif currMove:match( '^0' ) ~= nil then
+	elseif currMove:match( '^O' ) ~= nil then
 		--print( 'Castling Move' )
 	end
 	return numbers, letters, pieces, specials

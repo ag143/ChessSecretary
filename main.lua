@@ -1,5 +1,5 @@
 --Global Variables
-version = 1.20
+version = 1.22
 moveCheckVersion = 2.0
 smartKBVersion = 1.20
 isSimulator = "simulator" == system.getInfo("environment")
@@ -37,6 +37,20 @@ gameInfoType =
 	WhiteELO = 'number',
 	BlackELO = 'number',
 }
+
+--~ function PrintTable( t, l, max )
+--~ 	for k,v in pairs( t ) do
+--~ 		if l < max then
+--~ 			if type( v ) == 'table' then
+--~ 				l = l + 1
+--~ 				print( string.rep( '\t', l ) .. k )
+--~ 				PrintTable(v, l, max)
+--~ 				l = l - 1
+--~ 			end
+--~ 		end
+--~ 		print( string.rep( '\t', l ), k, v )
+--~ 	end	
+--~ end
 
 function GetMoveListPGN()
 	local allMoves = ''

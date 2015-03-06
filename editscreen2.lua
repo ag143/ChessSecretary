@@ -415,7 +415,7 @@ local function BkspMove( event )
 				moveDisplay:setFillColor( 1, 1, 1 )
 			end	
 		end
-		if currMove == '0-0' or currMove == '0-0-0' then
+		if currMove == 'O-O' or currMove == 'O-O-O' then
 			currMove = ''
 		else
 			currMove = string.sub( currMove, 1, string.len(currMove)-1)
@@ -473,7 +473,7 @@ end
 --local move = { '','','<<','<','>','>>','','' }
 local letters = { 'a','b','c','d','e','f','g','h' }
 local pieces = { 'R','N','B','Q','K','B','N','R' }
-local special = { '0-0-0','!','?','+','x','#','=','0-0' }
+local special = { 'O-O-O','!','?','+','x','#','=','O-O' }
 
 local buttonInfo = 
 {
@@ -619,7 +619,7 @@ for i=1,8 do
 --~ 		buttonInfo.width = butnWt
 --~ 	end
 	if i == 1 or i == 8 then
-		buttonInfo.fontSize = 14
+		buttonInfo.fontSize = 11
 	else
 		buttonInfo.fontSize = 20
 	end
@@ -715,7 +715,7 @@ B: Bishop
 
 N: Knight
 
-0-0: King side castling
+O-O: King side castling
 
 x: Capture
 
@@ -729,7 +729,7 @@ x: Capture
 
 =: Promotion of Pawn
 
-0-0-0: Queen side castling
+O-O-O: Queen side castling
 
 a-h: used to specify pawns
 a-h and 1-8 are used to indicate a start or ending square of a move.
