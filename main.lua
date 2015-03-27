@@ -1,9 +1,12 @@
 --Global Variables
-version = 1.22
+version = 1.23
 moveCheckVersion = 2.0
 smartKBVersion = 1.20
 isSimulator = "simulator" == system.getInfo("environment")
 isAndroid = "Android" == system.getInfo( "platformName" )
+isIOS = "iPhone OS" == system.getInfo( "platformName" )
+isWinPhone = "WinPhone" == system.getInfo( "platformName" )
+--print( system.getInfo( "platformName" ) )
 bannerEnd = 53
 appOriginY = display.screenOriginY + bannerEnd
 titleBarHeight = 32
@@ -29,7 +32,7 @@ gameInfoType =
 {
 	Event = 'default',
 	Site = 'default',
-	Date = 'default',
+	Date = 'decimal',
 	Round = 'number',
 	White = 'default',
 	Black = 'default',
@@ -37,6 +40,13 @@ gameInfoType =
 	WhiteELO = 'number',
 	BlackELO = 'number',
 }
+
+if isIOS then
+	gameInfoType.Date = 'default'
+	gameInfoType.Round = 'default'
+	gameInfoType.WhiteELO = 'default'
+	gameInfoType.BlackELO = 'default'
+end
 
 --~ function PrintTable( t, l, max )
 --~ 	for k,v in pairs( t ) do
@@ -141,7 +151,11 @@ end
 local ads = nil
 if not isSimulator then
 	ads = require "ads"
-	ads.init( 'admob', 'ca-app-pub-2270148772893486/6750641653' )
+	if isAndroid then
+		ads.init( 'admob', 'ca-app-pub-2270148772893486/6750641653' )
+	elseif isIOS then
+		ads.init( 'admob', 'ca-app-pub-2270148772893486/7435709658' )
+	end
 end
 
 -- Create a background to go behind our tableView
