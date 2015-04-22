@@ -439,46 +439,117 @@ gamelist.LoadInfo = function()
 	end
 end
 
+currDelRow = nil
+
 -- Handle row rendering
 local function onRowRender( event )
 	local phase = event.phase
-	local row = event.row
+	row = event.row
 	
 	-- in graphics 2.0, the group contentWidth / contentHeight are initially 0, and expand once elements are inserted into the group.
 	-- in order to use contentHeight properly, we cache the variable before inserting objects into the group
 
 	local groupContentHeight = row.contentHeight
 
-	local rowTitle = display.newText( row, gamelist.files[row.index], 0, 0, native.systemFontBold, 16 )
+	row.rowTitle = display.newText( row, gamelist.files[row.index], 0, 0, native.systemFontBold, 16 )
 
 	-- in Graphics 2.0, the row.x is the center of the row, no longer the top left.
-	rowTitle.x = LEFT_PADDING
+	row.rowTitle.x = LEFT_PADDING
 
 	-- we also set the anchorX of the text to 0, so the object is x-anchored at the left
-	rowTitle.anchorX = 0
+	row.rowTitle.anchorX = 0
 
-	rowTitle.y = groupContentHeight * 0.5
-	rowTitle:setFillColor( 0, 0, 0 )
+	row.rowTitle.y = groupContentHeight * 0.5
+	row.rowTitle:setFillColor( 0, 0, 0 )
 	
 	local rowArrow = display.newImage( row, "rowarrow.png", false )
-
 	rowArrow.x = row.contentWidth - LEFT_PADDING
 
 	-- we set the image anchorX to 1, so the object is x-anchored at the right
 	rowArrow.anchorX = 1
 	rowArrow.y = groupContentHeight * 0.5
+	
+	row.rowDelete = display.newImage( row, "delete.png", false )
+	row.rowDelete.x = row.contentWidth - LEFT_PADDING
+
+	-- we set the image anchorX to 1, so the object is x-anchored at the right
+	row.rowDelete.anchorX = 1
+	row.rowDelete.y = groupContentHeight * 0.5
+	row.rowDelete.alpha = 0
+end
+
+local swipedLeftIndex = 0
+local deleting = false
+local function onFileDelete( row )
+	--print( "delete " .. gamelist.files[row.index] )
+	local filePath = system.pathForFile( gamelist.files[row.index], system.DocumentsDirectory )
+	os.remove( filePath )
+	itemSelected = '' 
+	gamelist.FindFiles()
+	gamelist.TransitionToList()
+	deleting = false
+	swipedLeftIndex = 0
+	currDelRow = nil
 end
 
 -- Handle row touch events
 local function onRowTouch( event )
 	local phase = event.phase
 	local row = event.target
-	
-	if "press" == phase or "release" == phase then
-		-- Update the item selected text
-		itemSelected = gamelist.files[row.index]
-		newFile = false
-		gamelist.TransitionToItem()
+	if deleting then
+		return
+	end
+	print( phase )
+	if "tap" == phase then
+		if swipedLeftIndex == row.index then
+			deleting = true
+			currDelRow = row
+			transition.to( row, {time=250, alpha=0, tag="deleting", x=-50, onComplete=onFileDelete} )
+		else
+			itemSelected = gamelist.files[row.index]
+			newFile = false
+			gamelist.TransitionToItem()
+			if swipedLeftIndex ~= 0 and currDelRow then
+				transition.fadeOut( currDelRow.rowDelete, {time=100} )
+				currDelRow.rowTitle:setFillColor(0,0,0)
+			end
+			currdelRow = nil
+			swipedLeftIndex = 0
+		end
+	elseif "swipeLeft" == phase then
+		if swipedLeftIndex ~= 0 and currDelRow then
+			transition.fadeOut( currDelRow.rowDelete, {time=100} )
+			currDelRow.rowTitle:setFillColor(0,0,0)
+		end
+		swipedLeftIndex = row.index
+	elseif "swipeRight" == phase then
+		if swipedLeftIndex == row.index then
+			swipedLeftIndex = swipedLeftIndex * -1
+		end
+	elseif "release" == phase then
+		if swipedLeftIndex == row.index then
+			transition.fadeIn( row.rowDelete, {time=200} )
+			row.rowTitle:setFillColor(1,0,0)
+			currDelRow = row
+			--transition.moveBy( row, {time=1, x=-3*LEFT_PADDING} )
+		elseif swipedLeftIndex == row.index * -1 then
+			transition.fadeOut( row.rowDelete, {time=100} )
+			row.rowTitle:setFillColor(0,0,0)
+			currDelRow = nil
+			swipedLeftIndex = 0
+			--transition.moveTo( row, {time=1, x=0} )
+		else
+			-- Update the item selected text
+			itemSelected = gamelist.files[row.index]
+			newFile = false
+			gamelist.TransitionToItem()
+			if swipedLeftIndex ~= 0 and currDelRow then
+				transition.fadeOut( currDelRow.rowDelete, {time=100} )
+			end
+			--transition.moveTo( row, {time=1, x=0} )
+			currDelRow = nil
+			swipedLeftIndex = 0
+		end
 	end
 end
 
@@ -812,11 +883,17 @@ Corona Labs
 ]]
 
 local gamelisthelptext = [[
-This screen lists the current games that you have saved. Here, you can choose to add a new game or edit a current game. Scroll up and down by swiping up or down.
+This screen lists the current games that you have saved. Here, you can choose to add a new game, edit a current game, or delete a game. Scroll up and down by swiping up or down.
 
 To add a new game use the "New Game" button. Games are named automatically and sequentially and cannot be renamed at this time.
 
 To edit a game that you have saved touch the row on which the game is listed. This will take you to the Game Information screen.
+
+To select a game for deletion swipe left on the row on which the game is listed. A red X will appear instead of the Queen icon. Now touch the row again to delete the game. 
+
+To unselect the game for deletion swipe right on the row on which the game is listed with a red X. The Queen icon will reappear and the game is safe from deletion.
+
+NOTE: Once a game is deleted there is no way to recover it.
 
 To send comments/crash info/compliments via email use the "Feedback" button.
 
